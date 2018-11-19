@@ -134,7 +134,10 @@ Interpreter tflite = new Interpreter(tfliteModel);
                                 * SIZE_Y
                                 * DIM_PIXEL_SIZE
                                 * NUM_BYTES_PER_CHANNEL);
+imgData.order(ByteOrder.nativeOrder());                           
 </code></pre>
+<aside class="special"><p>If you run into problems related to inference probability, e.g., low or constant probability, you should add the second function call above to enforce Endianness of the ByteBuffer. <strong>We decide to be more explicit, instead of hinting, about ByteBuffer handling.<br></strong></p>
+</aside>
 <p>Let&#39;s quickly walk through what these variables are.</p>
 <ul>
 <li><em>DIM_BATCH_SIZE</em> is the number of images we&#39;re submitting for inference at a time.  In this case we&#39;re only submitting 1.</li>

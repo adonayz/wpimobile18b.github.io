@@ -178,7 +178,11 @@ imgData = ByteBuffer.allocateDirect(
                                 * SIZE_Y
                                 * DIM_PIXEL_SIZE
                                 * NUM_BYTES_PER_CHANNEL);
+imgData.order(ByteOrder.nativeOrder());                           
 ```
+
+Positive
+: If you run into problems related to inference probability, e.g., low or constant probability, you should add the second function call above to enforce Endianness of the ByteBuffer. **We decide to be more explicit, instead of hinting, about ByteBuffer handling.**  
 
 Let's quickly walk through what these variables are.
 - *DIM_BATCH_SIZE* is the number of images we're submitting for inference at a time.  In this case we're only submitting 1.
