@@ -1,0 +1,295 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Project 2 Tutorial - by Kyle Richards</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Project 2 Tutorial - by Kyle Richards"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Step 1 - Include the Sensey Library" duration="0">
+        <p>In your app build.gradle file add the following dependency, and change to the latest version. Currently the latest version is 1.8.0.</p>
+<p><code>implementation &#39;com.github.nisrulz:sensey:{latest version}</code></p>
+<p>You will have to re-sync gradle after adding the dependency.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2 - Initialize Sensey" duration="0">
+        <p>In the MainActivity.java file, add the following lines to import the Sensey Library and the Shake Detector:</p>
+<pre><code>import com.github.nisrulz.sensey.Sensey;
+import com.github.nisrulz.sensey.ShakeDetector;
+</code></pre>
+<p>Then, initialize the Sensey object and shake detection by adding these lines in the <code>onCreate()</code> function:</p>
+<pre><code>Sensey.getInstance().init(this);
+Sensey.getInstance().startShakeDetection(shakeListener);
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3 - Handle Shaking" duration="0">
+        <p>Now that we are alerted when the device is shaking, we have to actually do something when the user shakes the device. To do this, we create a ShakeListener with callbacks for when shaking begins and ends. Add this code inside your activity class:</p>
+<pre><code>ShakeDetector.ShakeListener shakeListener = new ShakeDetector.ShakeListener() {
+        @Override public void onShakeDetected() {
+
+        }
+
+        @Override public void onShakeStopped() {
+
+        }
+    };
+</code></pre>
+<p>Since we want to change the image when we detect a shake, call <code>selectRandomCat()</code> in the <code>onShakeDetected()</code> method. Additionally, you can do anything else you want when detecting a shake.</p>
+<p>Note: Even if you do not use the <code>onShakeStopped()</code> method (we do not in this example), it still must be overrided to create the shakeListener.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4 - Testing" duration="0">
+        <p>Now that our shake detection is all set up, we need to test it out. If you have a physical device, this is easy since you can just shake the device. However, testing on the AVD is a little trickier.</p>
+<p>First, run the app on the AVD. Then, on the toolbar next to the device, click on the ... at the bottom. This should open up a new extended controls window. Click on the Virtual Sensors tab on the left. Select the Move radio button. To simulate shaking, drag one of the sliders back and forth quickly. The image should change!</p>
+<p><img alt="Extended Controls" src="img/f102145c6d985aae.png"><br>Extended Control Panel with Virtual Sensors</p>
+<p>Getting Device Location</p>
+<p>In this section of the tutorial, we will be getting the user&#39;s location from the device&#39;s gps. In your app&#39;s build.gradle, add the following line, and resync your gradle file.</p>
+<p><code>implementation &#39;com.google.android.gms:play-services-location:15.0.1&#39;</code></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Section 1 - Get Location on Startup" duration="0">
+        
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1 - LocationManager" duration="0">
+        <p>The location manager is a service that allows you to get information about the device&#39;s location. The location manager has a &#34;gps provider&#34; that gives us the current location. To use the gps provider, add the following permission in the AndroidManifest:</p>
+<pre><code>&lt;uses-permission android:name=&#34;android.permission.ACCESS_FINE_LOCATION&#34;/&gt;
+</code></pre>
+<p>We are going to write a function getLocation() that returns a Location. Call this function in onCreate().</p>
+<pre><code>    private Location getLocation() {
+
+    }
+</code></pre>
+<p>First we will create a location manager object and then use it to get the last known location</p>
+<pre><code>    private Location getLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    }
+</code></pre>
+<p>Unfortunately, it is not this easy. Because the user may not have permission to use the gps provider, we have to check for permissions before we call getLastKnownLocation().</p>
+<pre><code>    private Location getLocation() {
+        Location location = null;
+
+        /* This section checks if the user has permission to access fine location. 
+           If they do not, then we request this permission. 
+           If after requesting, we still do not have permission, we have to not use gps services */
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                                                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},           
+                                                MY_PERMISSION_ACCESS_FINE_LOCATION);
+        }
+        // If we do have permission
+        else {
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }
+        return location;
+    }
+</code></pre>
+<p>In this function, MY_PERMISSION_ACCESS_FINE_LOCATION is a constant int. The value does not matter as long as it does not change (I used 1).</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2 - Handle Request Permissions" duration="0">
+        <p>We now need to figure out what to do when we ask for permission to use the GPS. If we get permission, then we want to get the location. Otherwise, we need to tell the user we will not be using location services. To accomplish this, we want to override the onRequestPermissionsResult() function.</p>
+<pre><code>    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSION_ACCESS_FINE_LOCATION: {
+                if (grantResults.length &gt; 0 &amp;&amp; grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getLocation(); // If we get access to location data, we want to get location again
+                } else {
+                    // TODO: Tell the user location is disabled
+                }
+                return;
+            }
+        }
+    }
+</code></pre>
+<p>If we are given location access, then we call getLocation() again. Even though this callback was triggered because of getLocation(), when we call getLocation() again, we now have permission, so the code in the else statement will execute.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3 - Parse the Location" duration="0">
+        <p>Now that we are sure we are allowed to use the location, we have to get some useful information out of it and display it to the user. We will create a textView that will display the name of the city the device is in.</p>
+<p>Create a function that will display the location using this text field</p>
+<pre><code>    private void displayLocation(Location location) {
+
+    }
+</code></pre>
+<p>To find the city, we first need to get the latitude and longitude, using the aptly named functions.</p>
+<pre><code>    private void displayLocation(Location location) {
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+    }
+</code></pre>
+<p>Now we can use a Geocoder to get useful information from this latitude and longitude. Geocoders can convert between longitude and latitude and human readable addresses. Define a geocoder in the activity class, and then instantiate it in onCreate().</p>
+<pre><code>private Geocoder geocoder;
+</code></pre>
+<pre><code>geocoder = new Geocoder(this, Locale.getDefault());
+</code></pre>
+<p>We can use this geocoder object to get the address information</p>
+<pre><code>    private void displayLocation(Location location) {
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+
+        List&lt;Address&gt; addresses = geocoder.getFromLocation(latitude, longitude, 1);
+        String city = addresses.get(0).getLocality();
+    }
+</code></pre>
+<p>Getting the city this way can result in a few errors. First, getFromLocation() throws an IOException, so we need to call it in a try catch block. Additionally, if the latitude and longitude do not correspond to a place that the geocoder knows about, then addresses will be an empty list, and you cannot use <code>.get(0)</code> on an empty list. Therefore, we will add some error checking.</p>
+<pre><code>    private void displayLocation(Location location) {
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+        try {
+            List&lt;Address&gt; addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if(addresses.size() &gt; 0) {
+                String city = addresses.get(0).getLocality();
+            }
+            else {
+                // TODO: No City
+            }
+        }
+        catch (IOException e) {
+            // TODO: Unable to run geocoder
+        }
+    }
+</code></pre>
+<p>Finally, we actually want to set the TextView in the UI. I created a helper function to set my text field, which had an id of cityText.</p>
+<pre><code>    private void setCityText(String msg) {
+        TextView t = (TextView)findViewById(R.id.cityText);
+        t.setText(msg);
+    }
+</code></pre>
+<p>The final display location function:</p>
+<pre><code>    private void displayLocation(Location location) {
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+        try {
+            List&lt;Address&gt; addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if(addresses.size() &gt; 0) {
+                setCityText(addresses.get(0).getLocality());
+            }
+            else {
+                setCityText(&#34;No City Here!&#34;);
+            }
+        }
+        catch (IOException e) {
+            setCityText(&#34;Unable to Find City&#34;);
+        }
+    }
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4 - Clean Up" duration="0">
+        <p>We can now go back and fill in our TODO from step 2. Simply call <code>setCityText(&#34;Location Disabled&#34;)</code></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 5 - Create Location Listener" duration="0">
+        <p>Now we can display the location when the app starts up. But what about when the device moves? We can subscribe to location changes and be notified when the device has moved a certain distance or a certain amount of time has passed.</p>
+<p>First, we have to create a location listener object. This is what will watch for device location changes.</p>
+<pre><code>private final LocationListener locationListener = new LocationListener() {
+    @Override
+    public void onLocationChanged(Location location) {
+        displayLocation(location);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+    @Override
+    public void onProviderEnabled(String provider) {}
+
+    @Override
+    public void onProviderDisabled(String provider) {}
+};
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 6 - Attach Location Listener" duration="0">
+        <p>We have our location listener, but it is not used anywhere yet. We need to tell the location manager that we want location updates. In our getLocation() function we will call requestLocationUdates(). In the else statement, below getLastKnownLocation() add the following line.</p>
+<pre><code>locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME, LOCATION_REFRESH_DISTANCE, locationListener);
+</code></pre>
+<p>LOCATION_REFRESH_TIME and LOCATION_REFRESH_DISTANCE are values that specify how often you want an update and after how far the device has traveled. These can be populated dynamically, but for simplicity, we are going to define them in our main activity.</p>
+<pre><code>private final long LOCATION_REFRESH_TIME = 2000;        // Location Update time (ms)
+private final float LOCATION_REFRESH_DISTANCE = 100;    // Location Update distance (m)
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 7 - Testing" duration="0">
+        <p>First we want to test our permissions. When you run the app, you should be presented with a Toast that asks if you want to allow the app to access your location. Click No. You should see the Location Disabled message. Now restart the app and click yes. If the Toast does not appear, try re-running the app. The current location should now be present. By default the location is Mountain View. To change the location, click on the ... at the bottom of the toolbar next to the AVD. Click on the first tab labeled Location. Here you can change the Longitude and Latitude. Test on combinations that you know are valid cities and combinations that you know are in the middle of the ocean. Check to make sure the &#34;No City Here!&#34; message prints when there is in fact no city there.</p>
+<p><img alt="Extended Controls" src="img/5aa8812d9894d0d0.png"><br>Extended Control Panel with Location</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

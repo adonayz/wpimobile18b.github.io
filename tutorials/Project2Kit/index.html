@@ -1,0 +1,369 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Tutorial: Location and OpenWeatherMap - By Karitta Zellerbach</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Tutorial: Location and OpenWeatherMap - By Karitta Zellerbach"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>This tutorial will show you how aquire the user&#39;s last known location, as well as weather data from the OpenWeatherMap API.</p>
+<p>Prerequisites:</p>
+<ul>
+<li>Android Studio 3.2</li>
+<li>Android physical or virtual devices API 27</li>
+<li>Even More Curiosity!</li>
+<li><a href="https://wpimobile18b.github.io/tutorials/Camera/#0" target="_blank">Camera Codelab Tutorial</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Getting OpenWeatherMap" duration="0">
+        <ol type="1">
+<li>Go to <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap</a> and make an account.</li>
+<li>Subscribe to the FREE Current weather and forecasts collection</li>
+<li>Get API Key</li>
+<li>Wait an hour for the API key, or continue this tutorial.</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Getting the User&#39;s Location" duration="0">
+        <p>Now we&#39;re ready to code. To start out, we&#39;re not going to jump into using OpenWeatherMap just quite yet. We&#39;re going to work on getting the latitude and longitude of the Android device.</p>
+<p>First find your <code>onActivityResult(..)</code> function. Inside it we&#39;re going to add this code.</p>
+<pre><code>       LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        double longitude = -71.8022;
+        double latitude = 42.2621;
+
+        if (location != null) {
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+        }
+</code></pre>
+<p>So the function <code>lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)</code> will return null if there is no last location, which is why we need to give it default values. I&#39;ve set mine to the coordinates of Worcester.</p>
+<p>However, before we run the program, we need to add a permission for the location in the AndroidManifest.xml</p>
+<p><code>&lt;uses-permission android:name=&#34;android.permission.ACCESS_FINE_LOCATION&#34; /&gt;</code></p>
+<p>However, if you try to run it, you might notice an error. This is because location needs to be given permission and run time. So in our <code>onCreate()</code> method, we&#39;re going to add</p>
+<pre><code>        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_LOCATION);
+            }
+        } else {
+            // not granted
+        }
+</code></pre>
+<p>Now we should have data in our lat and long coordinates. You can check this by calling <code>System.out.println(latitude + &#34;, &#34; + longitude)</code> and look at the logs in the Run view in Android Studio. You can double check that these are the right coordinates by looking at the coordinates on the AVD Settings.</p>
+<p><img alt="AVD Settings" src="img/cd16d8098cb4548e.png"></p>
+<p>We could just display these coords below our camera image, but let&#39;s do something more fun with them...</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="OpenWeatherMap" duration="0">
+        <p>What is OpenWeatherMap? Well it&#39;s a simple and fast API that gives you access to current weather, forecasts, maps and historical data in JSON, XML, and HTML formats. A variety of map layers are also available including precipitation, clouds, pressure, temperature, wind, and many more.</p>
+<p>We&#39;re going to use it to get the current weather. The cool thing about OWM is that you can get weather data for a particular location using the:</p>
+<ol type="1">
+<li>City Name</li>
+<li>City ID</li>
+<li>City Zipcode</li>
+<li>Geographic Coordinates</li>
+</ol>
+<p>You can probably guess which one we&#39;re going to use (it&#39;s the coordinates).</p>
+<p>To do an API call on the coordinates, we will pass the url</p>
+<p><code>api.openweathermap.org/data/2.5/weather?lat={lat}&amp;lon={lon}</code></p>
+<p>where lat is the latitude and long is the longituude. We also need to append <code>&amp;appid={API_KEY}</code> at the end using your custom API key.</p>
+<p>The response of this GET request will give us a JSON (JavaScript Object Notation) file that looks much like this. As you can see there several different parameters in the API response. You can also test this by putting the url in a browser.</p>
+<pre><code>{&#34;coord&#34;:{&#34;lon&#34;:139,&#34;lat&#34;:35},
+&#34;sys&#34;:{&#34;country&#34;:&#34;JP&#34;,&#34;sunrise&#34;:1369769524,&#34;sunset&#34;:1369821049},
+&#34;weather&#34;:[{&#34;id&#34;:804,&#34;main&#34;:&#34;clouds&#34;,&#34;description&#34;:&#34;overcast clouds&#34;,&#34;icon&#34;:&#34;04n&#34;}],
+&#34;main&#34;:{&#34;temp&#34;:289.5,&#34;humidity&#34;:89,&#34;pressure&#34;:1013,&#34;temp_min&#34;:287.04,&#34;temp_max&#34;:292.04},
+&#34;wind&#34;:{&#34;speed&#34;:7.31,&#34;deg&#34;:187.002},
+&#34;rain&#34;:{&#34;3h&#34;:0},
+&#34;clouds&#34;:{&#34;all&#34;:92},
+&#34;dt&#34;:1369824698,
+&#34;id&#34;:1851632,
+&#34;name&#34;:&#34;Shuzenji&#34;,
+&#34;cod&#34;:200}
+</code></pre>
+<p>You can choose which ones you like the most. I&#39;m personally going to choose:</p>
+<ul>
+<li>name - City name</li>
+<li>sys.country - Country</li>
+<li>main.temp - Temperature</li>
+<li>main.humidity - Humidity</li>
+<li>main.pressure - Pressure</li>
+<li>weather[0].description - Description</li>
+</ul>
+<p>The full explanation of parameters can be found <a href="https://openweathermap.org/current#one" target="_blank">here</a>.</p>
+<p>Now we need a way to extract this data. Let&#39;s create a new class and call it WeatherParser.</p>
+<pre><code>import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class WeatherParser {
+		// TODO
+		
+}
+</code></pre>
+<p>While we&#39;re at it, let&#39;s create a class that can act as a model for our data, called WeatherData.</p>
+<pre><code>public class WeatherData {
+		//TODO
+		
+}
+</code></pre>
+<p>So now that we have these two classes, we need to fill them in! So for the WeatherData class, I&#39;m going to create variables for the weather data I care about. Feel free to do the same or use different variables.</p>
+<pre><code>    private float pressure;
+    private float humidity;
+    private float temp;
+ 
+    private float longitude;
+    private float latitude;
+    private String country;
+    private String city;
+    
+    private String desc;
+</code></pre>
+<p>One of the snazzy things about Android Studio is that you can automatically generate Getters/Setters. You can do this by pressing Cmd + N or going to Code in the toolbar and clicking Generate.</p>
+<p><img alt="Generate" src="img/e3e71e3ab868773b.png"></p>
+<p>Now that we have our data model we need to work on our Parser. Our WeatherParser should take in a String of data and convert this to a WeatherData object.</p>
+<pre><code>public static WeatherData getWeatherData(String data) throws JSONException {
+        WeatherData weather = new WeatherData();
+        JSONObject obj = new JSONObject(data);
+        
+</code></pre>
+<p>Using the JSONObject, we can retrieve the values we care about! Since the JSON file with the weather has a lot of sub-objects and arrays, we need to be careful. It might be useful to create a temporary json file in Android Studio and Auto-Indent it (Cmd + I) so we can visualize the structure.</p>
+<pre><code>{
+  &#34;coord&#34;: {
+    &#34;lon&#34;: 139,
+    &#34;lat&#34;: 35
+  },
+  &#34;sys&#34;: {
+    &#34;country&#34;: &#34;JP&#34;,
+    &#34;sunrise&#34;: 1369769524,
+    &#34;sunset&#34;: 1369821049
+  },
+  &#34;weather&#34;: [
+    {
+      &#34;id&#34;: 804,
+      &#34;main&#34;: &#34;clouds&#34;,
+      &#34;description&#34;: &#34;overcast clouds&#34;,
+      &#34;icon&#34;: &#34;04n&#34;
+    }
+  ],
+  &#34;main&#34;: {
+    &#34;temp&#34;: 289.5,
+    &#34;humidity&#34;: 89,
+    &#34;pressure&#34;: 1013,
+    &#34;temp_min&#34;: 287.04,
+    &#34;temp_max&#34;: 292.04
+  },
+  &#34;wind&#34;: {
+    &#34;speed&#34;: 7.31,
+    &#34;deg&#34;: 187.002
+  },
+  &#34;rain&#34;: {
+    &#34;3h&#34;: 0
+  },
+  &#34;clouds&#34;: {
+    &#34;all&#34;: 92
+  },
+  &#34;dt&#34;: 1369824698,
+  &#34;id&#34;: 1851632,
+  &#34;name&#34;: &#34;Shuzenji&#34;,
+  &#34;cod&#34;: 200
+}
+</code></pre>
+<p>So firstly, I want to access the name of the city. This is an easy one since it&#39;s not embedded in another object.<br>I can simply call<br><code>obj.getString(&#34;name&#34;);</code>. Also, remember that we made those getters and setters for our weather data, which means we can call <code>weather.setCity(obj.getString(&#34;name&#34;));</code></p>
+<p>Not too bad, right?</p>
+<p>Well now it gets a little more intense. You might notice that the lat and lon parameters are within the &#34;coord&#34;. This means we need to get the coord object first, then get each value:</p>
+<pre><code>weather.setLatitude((float)(obj.getJSONObject(&#34;coord&#34;)).getDouble(&#34;lat&#34;));
+weather.setLongitude((float)(obj.getJSONObject(&#34;coord&#34;)).getDouble(&#34;lon&#34;));
+</code></pre>
+<p>Just takes a little bit of chaining!</p>
+<pre><code>weather.setHumidity((float) obj.getJSONObject(&#34;main&#34;).getDouble(&#34;humidity&#34;));
+weather.setPressure((float) obj.getJSONObject(&#34;main&#34;).getDouble(&#34;pressure&#34;));
+weather.setTemp((float) obj.getJSONObject(&#34;main&#34;).getDouble(&#34;temp&#34;));
+</code></pre>
+<p>Be careful if you choose to use the &#34;weather&#34; data, as that is nested in an array.</p>
+<p>You can use <code>JSONArray array = obj.getJSONArray(&#34;weather&#34;);</code> to get the array. Then call:</p>
+<pre><code>weather.setWeatherId(array.getJSONObject(0).getInt(&#34;id&#34;));
+weather.setDescr(array.getJSONObject(0).getString(&#34;description&#34;));
+weather.setCondition(array.getJSONObject(0).getString(&#34;main&#34;));
+weather.setIcon(array.getJSONObject(0).getString(&#34;icon&#34;));
+</code></pre>
+<p>Now it&#39;s finally time to display this data! Feel free to use whatever layout you prefer, but for the sake of this tutorial I&#39;m going to use some LinearLayouts. Specifically nesting two vertical LinearLayouts within a horizontal LinearLayout.</p>
+<p><img alt="Linear Layout" src="img/1e784f5c6e201542.png"></p>
+<p>This way we can achieve something that looks like this:</p>
+<p><img alt="Linear Layout" src="img/a13fb5e525712251.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Displaying the Data" duration="0">
+        <p>Now we need to display our data. Similar to the UI tutorial, create variables to reference your TextViews where you want to show the data.</p>
+<pre><code>mPhotoView = (ImageView) findViewById(R.id.mImageView);
+mTime = (TextView) findViewById(R.id.txtTime);
+mLoc = (TextView) findViewById(R.id.txtLoc);
+mPres = (TextView) findViewById(R.id.txtPres);
+mHum = (TextView) findViewById(R.id.txtHum);
+mTemp = (TextView) findViewById(R.id.txtTemp);
+mPath = (TextView) findViewById(R.id.mTextView);
+</code></pre>
+<p>Now remember AsyncTasks? Well we&#39;re going to make one of those.</p>
+<p>Let&#39;s make a private subclass called WeatherTask which will extend AsyncTask.</p>
+<pre><code>private class WeatherTask extends AsyncTask&lt;String, Void, WeatherData&gt; {
+	private String BASE_URL = &#34;http://api.openweathermap.org/data/2.5/weather?lat=&#34;;
+	private String API_KEY = &#34;{INSERT YOUR API}&#34;;
+        
+        @Override
+        protected WeatherData doInBackground(String... params) {
+        	// TODO
+        }
+
+
+        @Override
+        protected void onPostExecute(WeatherData weather) {
+            super.onPostExecute(weather);
+            // TODO
+
+        }
+    }
+</code></pre>
+<p>We&#39;re going to use doInBackground to call a HTTP GET. There&#39;s a lot going on so I&#39;ll break it down.</p>
+<pre><code>		@Override
+        protected WeatherData doInBackground(String... params) {
+            HttpURLConnection con = null;
+            InputStream is = null;
+            con = (HttpURLConnection) (new URL(BASE_URL + params[0] +  &#34;&amp;lon=&#34; + params[1] + API_KEY)).openConnection();
+            con.setRequestMethod(&#34;GET&#34;);
+            con.setDoInput(true);
+            con.setDoOutput(true);
+            con.connect();
+
+            StringBuffer buffer = new StringBuffer();
+            is = con.getInputStream();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            String line = null;
+            while ((line = br.readLine()) != null)
+                buffer.append(line + &#34;\r\n&#34;);
+
+            is.close();
+            con.disconnect();
+            String data = buffer.toString();
+            JSONObject object = new JSONObject(data);
+            WeatherData weather = WeatherParser.getWeatherData(data);
+            return weather;
+
+        }
+</code></pre>
+<p>Essentially we&#39;re opening a http connection to our API URL, calling a GET request, then using a string buffer to load the JSON reponse as a string. Finally we use our WeatherParser to create our WeatherData object.</p>
+<p>You&#39;ll notice a lot of red squiggly lines... that&#39;s because of all the exceptions that are possible. Feel free to automatically create the try/catch statements by hovering over the red lightbulbs.</p>
+<p><img alt="Try/Catch" src="img/39712295c6725fac.png"></p>
+<p>Now in the onPostExecute method we can set all the text views!</p>
+<pre><code>		@Override
+        protected void onPostExecute(WeatherData weather) {
+            super.onPostExecute(weather);
+            mTemp.setText(&#34;&#34; + Math.round((weather.getTemp() - 273.15)) + &#34; degrees (C)&#34;);
+            mLoc.setText(weather.getCity() + &#34;, &#34; + weather.getCountry());
+            mHum.setText(&#34;&#34; + weather.getHumidity() + &#34;%&#34;);
+            mPres.setText(&#34;&#34; + weather.getPressure() + &#34; hPa&#34;);
+            mDesc.setText(&#34;&#34; + weather.getDesc());
+        }
+</code></pre>
+<p>So finally we can go back to the lines of code that we used to get the longitude and latitude and call our custom WeatherTask.</p>
+<pre><code>       LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        double longitude = -71.8022;
+        double latitude = 42.2621;
+
+        if (location != null) {
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+        }
+
+        WeatherTask task = new WeatherTask();
+        task.execute(new String[]{String.valueOf(latitude),String.valueOf(longitude)});
+</code></pre>
+<p>If you run the program you should see something lke this!</p>
+<p><img alt="Try/Catch" src="img/4cba06e3fe8722d1.png"></p>
+<p>Wait, you mean you don&#39;t see the timestamp? Well that&#39;s a quick fix.</p>
+<p>You should have stored the path to your image somewhere from the Camera tutorial. You can simply create a reference to this file, and check the last modified date to get the time that the photo was taken!</p>
+<pre><code>        File file = new File(pathToFile);
+        if (file.exists()) {
+            long date = file.lastModified();
+            Date fileData = new Date(date);
+            mTime.setText(fileData.toString());
+        }
+</code></pre>
+<p>Now you should have a pretty good display of weather data to show your insane data aquisition skills!</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary and Resources" duration="0">
+        <p>In this tutorial we built on the Camera codelab tutorial to use data aquisiton from the OpenWeatherMap API by first aquiring the geographic location of our android device.</p>
+<p>If you want to learn more about OpenWeatherMap, there are tons of resources online, especially on the <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap Website</a>.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

@@ -15,3 +15,4 @@ permalink: /revisions/
 - Nov 6: uploaded **lecture 5** and **project 3**; sent out the google cloud credits. 
 - Nov 7: posted **four** Project 1 Part 2 tutorials! Check them out if you want more mobile hands-on experience.  
 - Nov 10: uploaded **lecture 6**, **readings 7**, **readings 8**, and released **project 4**. 
+- Nov 13&19: uploaded **lecture 7**, **lecture 8**, and posted **three** Project 2 Part 2 tutorials! 

@@ -15,8 +15,8 @@ layout: home
 ## Announcements
 Please refer to [here](/revisions/) for a complete list of past announcements. 
 
-- Nov 7: posted **four** Project 1 Part 2 tutorials! Check them out if you want more mobile hands-on experience.  
 - Nov 10: uploaded **lecture 6**, **readings 7**, **readings 8**, and released **project 4**. 
+- Nov 13&19: uploaded **lecture 7**, **lecture 8**, and posted **three** Project 2 Part 2 tutorials! 
 
 
 ## Schedule  ##
@@ -26,12 +26,12 @@ Please refer to [here](/revisions/) for a complete list of past announcements.
 | Lecture 1 | [Intro to Mobile and Ubiquitous Computing <br> Android Basic](https://ia.wpi.edu/cs4518/resources.php) | [reading 1](https://ia.wpi.edu/cs4518/resources.php) | [group project](https://ia.wpi.edu/cs4518/resources.php), proposal/deliverable due Nov. 30/Dec. 13 11:59:59PM <br>  [project 1](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Oct. 30 11:59:59PM
 | Lecture 2 | [Android Basic: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 2](https://ia.wpi.edu/cs4518/resources.php)  | [topic survey](https://ia.wpi.edu/cs4518/resources.php), proposal/deliverable due Nov. 2/Nov. 19 11:59:59PM <br>
 | Lecture 3 | [Mobile Data Acquisition: part 1](https://ia.wpi.edu/cs4518/resources.php)  | [reading 3](https://ia.wpi.edu/cs4518/resources.php)    | [project 2](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 6 11:59:59PM 
-| Lecture 4 | [Mobile Data Acquisition: part 2](https://ia.wpi.edu/cs4518/resources.php)  |[reading 4](https://ia.wpi.edu/cs4518/resources.php)  | *Project 1 Part 2 tutorials:* <br> [React Native Design by Kit Zellerbach](https://wpimobile18b.github.io/tutorials/Project1Kit/#0) <br>[Fragment and Animation by Antony Qin](https://wpimobile18b.github.io/tutorials/Project1Antony/#0) <br> [Navigation Drawer by Alex Wheeler](https://wpimobile18b.github.io/tutorials/Project1AlexW/#0) <br> [RecyclerView by Alex Antaya](https://wpimobile18b.github.io/tutorials/Project1AlexA/#0)
+| Lecture 4 | [Mobile Data Acquisition: part 2](https://ia.wpi.edu/cs4518/resources.php)  |[reading 4](https://ia.wpi.edu/cs4518/resources.php)  | *Project 1 Part 2 tutorials:* <br> [1. React Native Design by Kit Zellerbach](https://wpimobile18b.github.io/tutorials/Project1Kit/#0) <br>[2. Fragment and Animation by Antony Qin](https://wpimobile18b.github.io/tutorials/Project1Antony/#0) <br> [3. Navigation Drawer by Alex Wheeler](https://wpimobile18b.github.io/tutorials/Project1AlexW/#0) <br> [4. RecyclerView by Alex Antaya](https://wpimobile18b.github.io/tutorials/Project1AlexA/#0)
 | Lecture 5 | [Mobile Data Storage: part 1](https://ia.wpi.edu/cs4518/resources.php)   | [reading 5](https://ia.wpi.edu/cs4518/resources.php) | [project 3](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 13 11:59:59PM 
-| Lecture 6 | [Mobile Data Storage: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 6](https://ia.wpi.edu/cs4518/resources.php) |
-| Lecture 7 | Data manipulation: part 1 | [reading 7](https://ia.wpi.edu/cs4518/resources.php) | [project 4](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 20 11:59:59PM 
-| Lecture 8 | Data manipulation: part 2 | [reading 8](https://ia.wpi.edu/cs4518/resources.php) |
-| Lecture 9 | Student Presentations: Topic Survey | [reading 9](url) | 
+| Lecture 6 | [Mobile Data Storage: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 6](https://ia.wpi.edu/cs4518/resources.php) | *Project 2 Part 2 tutorials:* <br> [1. Android Location and OpenWeather API by Kit Zellerbach](https://wpimobile18b.github .io/tutorials/Project2Kit/#0) <br> [2. Using third-party libs: Sensey Library by Kyle Richards](https://wpimobile18b.github.io/tutorials/Project2KyleR/#0) <br> [3. Using Google Play Services: Fused Location by Alexander Antaya](https://wpimobile18b.github.io/tutorials/Project2AlexA/#0) 
+| Lecture 7 | [Data manipulation: part 1](https://ia.wpi.edu/cs4518/resources.php) | [reading 7](https://ia.wpi.edu/cs4518/resources.php) | [project 4](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 20 11:59:59PM 
+| Lecture 8 | [Data manipulation: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 8](https://ia.wpi.edu/cs4518/resources.php) |
+| Lecture 9 | Student Presentations: Topic Survey | ~~reading 9~~ | 
 | Lecture 10 | Android Internals: part 1  | [reading 10](url) |
 | Lecture 11| Android Internals: part 2 | [reading 11](url) | 
 | Lecture 12 | Mobile-specific optimization: part 1    | [reading 12](url) |
