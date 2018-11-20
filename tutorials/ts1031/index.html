@@ -1,0 +1,495 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Topic Survey - by Team 1031</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Topic Survey - by Team 1031"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Google Material Design" duration="0">
+        <h2>Created by:</h2>
+<ul>
+<li>Antony Qin</li>
+<li>Kyle Savell</li>
+<li>Alex Tian</li>
+<li>Joseph Yuen</li>
+</ul>
+<p>Material Design Tutorial</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Tutorial Overview" duration="0">
+        <p>This tutorial will show you how to spice up your applications using material design principles and styles. To do this, we will be editing the source code of a travel mobile application called <em>TravelToday</em>.</p>
+<p>You will build a page of the TravelToday app that contains:</p>
+<ul>
+<li>A top app bar</li>
+<li>ScrollView backdrop</li>
+<li>A pull up menu</li>
+<li>Custom styling</li>
+</ul>
+<p>In this tutorial you will do the following:</p>
+<ul>
+<li>Learn the principles of material design</li>
+<li>Separate a base application into a modular system</li>
+<li>Implement the above features</li>
+<li>Spice up the application with a custom style</li>
+</ul>
+<p>Prerequisites:</p>
+<ul>
+<li>Android Studio Installed</li>
+<li>AVD installed with API 27 or later</li>
+<li>Starter Code Downloaded</li>
+</ul>
+<h3>Starter Code</h3>
+<p>Please the download the following starter code before you proceed to the next sections:<br>https://github.com/kqsavell/MaterialDesign_Codelab/archive/starting_code.zip</p>
+<p>The starter code contains a bland looking application that has a basic toolbar, a picture of Honolulu, and some blank white space underneath.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What is Material Design?" duration="0">
+        <p>Material Design is a visual language that synthesizes the classic principles of good design with the innovation of technology and science.</p>
+<h2>Goals</h2>
+<ul>
+<li>Create - Create a visual language that synthesizes the classic principles of good design with the innovation and possibility of technology and science.</li>
+<li>Unify - Develop a single underlying system that unifies the user experience across platforms, devices, and input methods.</li>
+<li>Customize - Expand Material&#39;s visual language and provide a flexible foundation for innovation and brand expression.</li>
+</ul>
+<h2>Principles</h2>
+<ul>
+<li>Material is the Metaphor</li>
+<li>Bold, Graphic, Intentional</li>
+<li>Motion Provides Meaning</li>
+<li>Flexible Foundation</li>
+<li>Cross-Platform</li>
+</ul>
+<h2>Styles</h2>
+<p>This tutorial will focus on the use of styles to customize widget:</p>
+<ul>
+<li>Color</li>
+<li>Layout</li>
+<li>Interactivity</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Modularize 
+TravelToday" duration="0">
+        <p>First thing we want to do is modularize the separate aspects of the application into fragments. This streamlines the code so that all functionality is not jam packed into a single file, and makes updating separate features easier in the future.</p>
+<ul>
+<li>First navigate to  and select <code>File &gt; New &gt; Fragment &gt; Fragment (Blank)</code></li>
+</ul>
+<p><img alt="TopicSurvey_AddFragment1" src="img/2e84fbf1a3c2d8c1.jpg"></p>
+<ul>
+<li>Name the new fragment <code>ToolbarFragment</code>. Make sure that the option ‘Create layout XML?&#39; is checked. Uncheck the two includes (‘include fragment factory methods? &amp; include interface callback?&#39;).</li>
+</ul>
+<p><img alt="TopicSurvey_AddFragment2" src="img/c4c6b24749069cbc.jpg"></p>
+<ul>
+<li>Do the same to create our fragment for holding images (call it <code>MapFragment</code>), and fragment for holding a pop up menu (call it <code>MenuFragment</code>).</li>
+<li>Now let&#39;s add our fragments so that our <code>MainActivity</code> retains the same functionality as before.</li>
+<li>Delete all the children of the <code>activity_main.xml</code>, except the root layout.</li>
+<li>Navigate to the palette, and drag in a <code>&lt;fragment&gt;</code>.</li>
+<li>Select the <code>ToolbarFragment</code> and constrain its top to the top of the screen, with 0 to the left and right so it stays centered.</li>
+</ul>
+<p><img alt="toolbarfragmentlayout" src="img/8daf18c1f40835d2.jpg"></p>
+<ul>
+<li>Drag in another <code>&lt;fragment&gt;</code>, and select <code>MapFragment</code>. Constrain the top of this fragment to the bottom of the <code>ToolbarFragment</code>. Constrain its bottom to 85dp off the bottom of the screen. That 85dp will be filled in by the <code>MenuFragment</code> when it&#39;s inflated.</li>
+</ul>
+<p><img alt="mapfragmentlayout" src="img/7bf9326971411260.jpg"></p>
+<ul>
+<li>Finally drag in the last <code>&lt;fragment&gt;</code>, as <code>MenuFragment</code>, and constrain its bottom to the bottom of the screen, with 0 to the left and right.</li>
+</ul>
+<p><img alt="menufragmentlayout" src="img/26ad7af421a0cdd4.jpg"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Implement Widgets" duration="0">
+        <h2>Making a custom action bar</h2>
+<p>The first widget we will add to the application is a custom ActionBar. The ActionBar is the bar at the top of the screen by default.</p>
+<p><img alt="oldtoolbar" src="img/c626ead5df7a8a5f.jpg"></p>
+<p>It is important to make the ActionBar as easy to use and readable as possible. In Material Design it is common to use symbolic icons for menu items in the ActionBar, since they reduce clutter and are readable across languages. Thus, we will be adding a mockup menu icon to our ActionBar.</p>
+<p>In order customize the ActionBar, the default one needs to be removed and a new one must be created. To get rid of the old ActionBar, an application theme without an ActionBar can be used. The application theme can be edited in the styles.xml file, which is found in the values directory of the resources. In the style tag, the theme can be changed to another default one:</p>
+<p><code>&lt;style name=&#34;AppTheme&#34; parent=&#34;Theme.AppCompat.Light.NoActionBar&#34;&gt;</code></p>
+<p>The &#34;NoActionBar&#34; themes do not have an ActionBar to start with, so any of these themes can be used.</p>
+<p>Next, we need to add the new ActionBar to the layout. To do this, we will be filling the toolbar fragment we made with a xml layout. In the resources folder created a new directory called &#34;menu&#34;. In the menu directory create a new xml resource file (we named ours &#34;actions&#34;). Replace the default code of this new xml file with the given:</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;menu xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;&gt;
+
+    &lt;item
+        android:id=&#34;@+id/action_airplane&#34;
+        android:icon=&#34;@drawable/outline_flight_24&#34;
+        android:title=&#34;@string/app_icon&#34;
+        app:showAsAction=&#34;always&#34; /&gt;
+
+&lt;/menu&gt;
+</code></pre>
+<p>The icon is an airplane icon that we have provided. Note that for ActionBar items the title attribute must always exist. If you wanted to add additional icons to the ActionBar, more item tags can be added to this xml resource.</p>
+<p>Navigate to fragment_toolbar.xml and add the following code in order to add a toolbar to our toolbar fragment:</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;&gt;
+
+    &lt;android.support.v7.widget.Toolbar
+        android:id=&#34;@+id/toolbar_fragmentToolBar&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;
+        android:background=&#34;?attr/colorPrimary&#34;
+        android:elevation=&#34;4dp&#34;
+        android:theme=&#34;@style/ThemeOverlay.AppCompat.ActionBar&#34;
+        app:popupTheme=&#34;@style/ThemeOverlay.AppCompat.Light&#34; /&gt;
+
+&lt;/android.support.constraint.ConstraintLayout&gt;
+</code></pre>
+<p>Navigate to <code>ToolbarFragment.java</code> and refactor the base code so that it looks like this:</p>
+<pre><code>private Toolbar mToolbar;
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
+        View view = inflater.inflate(R.layout.fragment_toolbar, container, false);
+
+        mToolbar = view.findViewById(R.id.toolbar_fragmentToolBar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
+
+        setHasOptionsMenu(true);
+
+        return view;
+    }
+</code></pre>
+<p>To add this icon to the Toolbar we created, we will need to inflate it when the Toolbar is created. We can do this by adding an overidden <code>onCreateOptionsMenu</code> callback underneath <code>onCreateView</code>:</p>
+<pre><code>@Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
+        inflater.inflate(R.menu.actions, menu);
+        super.onCreateOptionsMenu(menu,inflater);
+    }
+</code></pre>
+<p>Now when you run the application, the ActionBar should look as so (the colors may be different):</p>
+<p><img alt="newtoolbar" src="img/f198339eaff60653.jpg"></p>
+<h2>ScrollView</h2>
+<p>Now that we have the app bar, let&#39;s add some content to the middle of the screen. We will be adding a ScrollView to the map fragment that we made, which allows the user to scroll through a layout by dragging on the screen. This adds a degree of interactivity that is important in Material Design. We used to following code in the <code>fragment_map.xml</code> file for the ScrollView:</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;&gt;
+
+    &lt;ScrollView
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;
+        android:layout_margin=&#34;0dp&#34;
+        android:padding=&#34;0dp&#34;&gt;
+
+        &lt;LinearLayout
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;wrap_content&#34;
+            android:layout_margin=&#34;0dp&#34;
+            android:gravity=&#34;top|center|fill&#34;
+            android:orientation=&#34;vertical&#34;
+            android:padding=&#34;0dp&#34;&gt;
+
+            &lt;ImageView
+                android:id=&#34;@+id/imageView_disney&#34;
+                android:layout_width=&#34;match_parent&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:adjustViewBounds=&#34;true&#34;
+                app:srcCompat=&#34;@mipmap/disney&#34; /&gt;
+
+            &lt;ImageView
+                android:id=&#34;@+id/imageView_newzealand&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:adjustViewBounds=&#34;true&#34;
+                android:scaleType=&#34;fitStart&#34;
+                app:srcCompat=&#34;@mipmap/newzealand&#34; /&gt;
+
+            &lt;ImageView
+                android:id=&#34;@+id/imageView_honolulu&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:adjustViewBounds=&#34;true&#34;
+                android:scaleType=&#34;fitXY&#34;
+                android:visibility=&#34;visible&#34;
+                app:srcCompat=&#34;@mipmap/honolulu&#34; /&gt;
+
+            &lt;ImageView
+                android:id=&#34;@+id/imageView_wakanda&#34;
+                android:layout_width=&#34;match_parent&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:adjustViewBounds=&#34;true&#34;
+                android:scaleType=&#34;fitXY&#34;
+                app:srcCompat=&#34;@mipmap/wakanda&#34; /&gt;
+        &lt;/LinearLayout&gt;
+    &lt;/ScrollView&gt;
+
+&lt;/android.support.constraint.ConstraintLayout&gt;
+</code></pre>
+<p>There are a couple things to note here. First, we have a LinearLayout inside of the ScrollView. This way the screen can be scrolled up and down. Second, each image item in the LinearLayout has the <code>android:adjustViewBounds</code> attribute set to true. This formats the images so that there is no blank space between each image.</p>
+<p>Feel free to add any images of your choosing to each item or you can use the images provided. Your map fragment should look something like this in the design view:</p>
+<p><img alt="TopicSurvey_MapFragment" src="img/99ed95e6024cc155.jpg"></p>
+<h2>Pull-up Menu</h2>
+<p>Material design dictates that motion should provide meaning. <em>TravelToday</em> requires a menu, so let&#39;s implement a menu at the bottom of the screen which provides feedback to the user.</p>
+<p>First we have to create another .xml file to implement the menu. Right click on /res/layout and make a new file called <code>bottom_sheet.xml</code>. We have to make this file to contain the <code>fragment_menu.xml</code> in a coordinator layout.</p>
+<p>To do this, in your newly created file, replace the code with:</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.design.widget.CoordinatorLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+   xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+   xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+   android:layout_width=&#34;match_parent&#34;
+   android:layout_height=&#34;match_parent&#34;
+   tools:context=&#34;.MainActivity&#34;&gt;
+
+   &lt;!-- include fragment_menu.xml --&gt;
+   &lt;include layout=&#34;@layout/fragment_menu&#34; /&gt;
+
+&lt;/android.support.design.widget.CoordinatorLayout&gt;
+</code></pre>
+<p>Now we have to make the actual menu in <code>fragment_menu.xml</code>. In the menu, we&#39;ll include 4 total buttons. Copy in the code below into <code>fragment_menu.xml</code> to make these buttons.</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;LinearLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+   xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+   android:id=&#34;@+id/bottom_sheet&#34;
+   android:layout_width=&#34;match_parent&#34;
+   android:layout_height=&#34;345dp&#34;
+   android:background=&#34;@android:color/darker_gray&#34;
+   android:orientation=&#34;vertical&#34;
+   app:behavior_hideable=&#34;true&#34;
+   app:behavior_peekHeight=&#34;90dp&#34;
+   app:layout_behavior=&#34;android.support.design.widget.BottomSheetBehavior&#34;&gt;
+
+   &lt;Button
+       android:id=&#34;@+id/button&#34;
+       android:layout_width=&#34;match_parent&#34;
+       android:layout_height=&#34;90dp&#34;
+       android:gravity=&#34;center&#34;
+       android:text=&#34;Menu&#34; /&gt;
+
+   &lt;Button
+       android:id=&#34;@+id/hotel&#34;
+       android:layout_width=&#34;match_parent&#34;
+       android:layout_height=&#34;85dp&#34;
+       android:gravity=&#34;center&#34;
+       android:text=&#34;Hotel&#34; /&gt;
+
+   &lt;Button
+       android:id=&#34;@+id/flight&#34;
+       android:layout_width=&#34;match_parent&#34;
+       android:layout_height=&#34;85dp&#34;
+       android:gravity=&#34;center&#34;
+       android:text=&#34;Flight&#34; /&gt;
+
+   &lt;Button
+       android:id=&#34;@+id/car&#34;
+       android:layout_width=&#34;match_parent&#34;
+       android:layout_height=&#34;85dp&#34;
+       android:gravity=&#34;center&#34;
+       android:text=&#34;Car&#34; /&gt;
+
+&lt;/LinearLayout&gt;
+</code></pre>
+<p>You might notice that our strings are hard-coded in. If you would like to replace these with resources from the strings folder, feel free to do so.</p>
+<p>At this point, you have made the base design components of the menu, but we need to inflate it and make it functional.</p>
+<p>We&#39;re going to head over to <code>MenuFragment.java</code> and add in the following code to give life to our menu. By default, the menu can only be expanded and collapsed by dragging. To create a better user experience, we can override the top button&#39;s <code>onClick</code> functionality. We have also included other helpful overrides if you choose to use a bottom sheet in your next project:</p>
+<pre><code>public class MenuFragment extends Fragment
+{
+   @Override
+   public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+   {
+       View view = inflater.inflate(R.layout.bottom_sheet, container, false);
+
+       // get bottom sheet view
+       LinearLayout mBottomSheet = (LinearLayout) view.findViewById(R.id.bottom_sheet);
+
+       Button mButton = (Button) view.findViewById(R.id.button);
+
+       // init bottom sheet behavior from mBottomSheet object
+       final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
+
+       // change state of bottom sheet
+       bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+       // feel free to play around with these other states
+       //bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+       //bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+       mButton.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+                   bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+               } else {
+                   bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+               }
+
+           }
+       });
+
+       // here are some overrides for reference if you choose to use BottomSheetBehavior in your next project
+       bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+           @Override
+           public void onStateChanged(@NonNull View bottomSheet, int newState) {
+           }
+
+           @Override
+           public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+           }
+       });
+
+       return view;
+
+   }
+}
+</code></pre>
+<p><img alt="MenuFragment_Closed" src="img/77dd9a754df5beb0.png"></p>
+<p><img alt="MenuFragment_Open" src="img/5f49a521f66a3a92.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Stylize 
+TravelToday" duration="0">
+        <h2>Colors and Styles</h2>
+<p>Next, let&#39;s choose a color scheme to properly represent the app, as well as draw user&#39;s attention to important signifiers of action. In this system, a primary and a secondary color are typically selected to represent your brand. Dark and light variants of each color can then be applied to your UI in different ways.</p>
+<p>A primary color is the color displayed most frequently across your app&#39;s screens and components. A secondary color provides more ways to accent and distinguish your product. Having a secondary color is optional, and should be applied sparingly to accent select parts of your UI.</p>
+<p>To create contrast between UI elements, such as distinguishing a top app bar from a system bar, you can use light or dark variants of your primary color on each elements.</p>
+<ul>
+<li>Go to https://coolors.co/545e75-63adf2-a7cced-304d6d-82a0bc, which generates a random set of colors that work well with each other. Press the spacebar to generate a new set of colors. Press the lock button an the colors you want to use before pressing space to keep those colors in the new sets you create.</li>
+<li>Pick 2 colors that you think would work as a primary and secondary color and save their hex codes. They should be different from each other. Pick a darker shade of the primary color by hovering over the color in coolors.co and pressing the square grid icon.</li>
+<li>Navigate to colors.xml under the res directory.</li>
+<li>Set the hex value of <code>colorPrimary</code> to your primary color, the hex value of <code>colorPrimaryDark</code> to the darker shade of your primary color,<br>And the hex value of <code>colorAccent</code> to your secondary color.<br>** If you ever think that you need more colors to make your app look beautiful, you can simply add the in the same way you added the other colors. For example, you could add a color called <code>colorPrimaryLight</code>, which is a lighter shade of your primary color.</li>
+<li>Add another color called <code>textColorPrimary</code> and make it a color that stands out from your primary color. Usually this is either white (<code>#FFFFFF</code>) or black (<code>#000000</code>). You can do this by adding this line in colors.xml:</li>
+</ul>
+<pre><code>&lt;color name=&#34;textColorPrimary&#34;&gt;#FFFFFF&lt;/color&gt;
+</code></pre>
+<p>*In styles.xml, which is in the same location as colors.xml add the color in the AppTheme style.</p>
+<pre><code>&lt;style name=&#34;AppTheme&#34; parent=&#34;Theme.AppCompat.Light.NoActionBar&#34;&gt;
+        &lt;!-- Customize your theme here. --&gt;
+        &lt;item name=&#34;colorPrimary&#34;&gt;@color/colorPrimary&lt;/item&gt;
+        &lt;item name=&#34;colorPrimaryDark&#34;&gt;@color/colorPrimaryDark&lt;/item&gt;
+        &lt;item name=&#34;colorAccent&#34;&gt;@color/colorAccent&lt;/item&gt;
+        &lt;item name=&#34;android:textColorPrimary&#34;&gt;@color/textColorPrimary&lt;/item&gt;
+    &lt;/style&gt;
+</code></pre>
+<ul>
+<li>If you want the icons at the top of the screen to be black instead of white, then add the following line in the AppTheme style</li>
+</ul>
+<pre><code>&lt;item name=&#34;android:windowLightStatusBar&#34; tools:targetApi=&#34;m&#34;&gt;true&lt;/item&gt;
+</code></pre>
+<ul>
+<li>Next we will change the color of the toolbar to your primary color. Add the following style to your styles.xml to do this.</li>
+</ul>
+<pre><code>&lt;style name=&#34;Widget.Material.Toolbar&#34; parent=&#34;Widget.AppCompat.Toolbar&#34;&gt;
+        &lt;item name=&#34;android:background&#34;&gt;?attr/colorPrimary&lt;/item&gt;
+        &lt;item name=&#34;android:theme&#34;&gt;@style/AppTheme&lt;/item&gt;
+        &lt;item name=&#34;popupTheme&#34;&gt;@style/ThemeOverlay.AppCompat.Light&lt;/item&gt;
+    &lt;/style&gt;
+</code></pre>
+<ul>
+<li>If you want to change the color of the background of the whole app, add <code>android:background=&#34;@color/. . .&#34;</code> under <code>&lt;android.support.constraint.ConstraintLayout</code> in <code>activity_main.xml</code>. Try out different colors and see what works. Your <code>activity_main.xml</code> file should look like this:</li>
+</ul>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    android:id=&#34;@+id/constraintLayout&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    android:background=&#34;@color/colorAccent&#34;
+    tools:context=&#34;.MainActivity&#34;&gt;
+    ...
+</code></pre>
+<ul>
+<li>Now we will add styles for the menu buttons. Styles allow you to specify certain attributes you want to apply to specific components. Here, we will change the color and text of the buttons in the menu. We will create a style called <code>ButtonMenu</code> for the button that opens the menu, and styles <code>ButtonMenuItem1</code> and <code>ButtonMenuItem2</code> for the buttons in the menu.</li>
+<li>First we will create the <code>ButtonMenu</code> style. We will set the color of the button to the primary color, change the text size to <code>36dp</code>, make the text bold, change the text color to the primary text color, and set <code>textAllCaps</code> to false. Add the following code to <code>styles.xml</code>  to create this style:</li>
+</ul>
+<pre><code>&lt;style name = &#34;ButtonMenu&#34; parent = &#34;Widget.AppCompat.Button&#34; &gt;
+        &lt;item name=&#34;android:background&#34;&gt;@color/colorPrimary&lt;/item&gt;
+        &lt;item name=&#34;android:theme&#34;&gt;@style/AppTheme&lt;/item&gt;
+        &lt;item name=&#34;popupTheme&#34;&gt;@style/ThemeOverlay.AppCompat.Light&lt;/item&gt;
+        &lt;item name=&#34;android:textSize&#34;&gt;36dp&lt;/item&gt;
+        &lt;item name=&#34;android:textStyle&#34;&gt;bold&lt;/item&gt;
+        &lt;item name=&#34;android:textAllCaps&#34;&gt;false&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+<ul>
+<li>The code for adding styles for the menu items is very similar. The only two things you have to change are <code>android:background</code> and <code>android:textSize</code> items. Make two more styles, called <code>ButtonMenuItem1</code> and <code>ButtonMenuItem2</code> in the same way you made the <code>ButtonMenu</code> style, just with those two items changed to the color and size you would like. The color of <code>ButtonMenuItem1</code> should be different than the color of <code>ButtonMenuItem2</code>.</li>
+<li>Just creating the styles will not change the UI of your app. You need to apply these styles to each element in the layout. Fortunately, this only requires one line to do.</li>
+<li>Navigate to <code>res/layout/fragment_menu.xml</code>. The first <code>Button</code> element in this file is the button that opens the menu. Add <code>style=&#34;@style/ButtonMenu&#34;</code> under the <code>Button</code> element, just like this:</li>
+</ul>
+<pre><code>&lt;Button
+    style=&#34;@style/ButtonMenu&#34;
+    android:id=&#34;@+id/button&#34;
+    ...
+    /&gt;
+</code></pre>
+<ul>
+<li>For the next 3 <code>Buttons</code>, add the <code>ButtonMenuItem1</code> style, <code>ButtonMenuItem2</code> style, and <code>ButtonMenuItem1</code> style in that order.</li>
+<li>Run your app and marvel at how beautiful your app has become!</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Congratulations, you&#39;ve completed the tutorial on emulating the practices of Google Material Design!" duration="0">
+        
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

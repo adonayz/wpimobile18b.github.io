@@ -1,0 +1,140 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Tutorial: ARCore - By Team 1039</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Tutorial: ARCore - By Team 1039"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Install Software" duration="0">
+        <p>In order to complete this tutorial, the following software must be downloaded:</p>
+<ul>
+<li>Unity: https://unity3d.com/get-unity/download (select personal)<br><br><ul>
+<li>Note: please ensure that Android Build Support is selected during installation</li>
+</ul>
+</li>
+<li>ARCore SDK for Unity: https://github.com/google-ar/arcore-unity-sdk/releases</li>
+<li>Starter code: https://github.com/Redslaya/ARCore</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting up the Environment" duration="0">
+        <p>In your Unity project, it is necessary to configure the environment to support Android and augmented reality (AR). In Unity, select <code>File -&gt; Build Settings</code>, and a new window should appear with the option to select the platform. Select <code>Android</code> in the platform list and click the <strong>Switch Platform</strong> button below. This may take a few seconds to change. Afterwards, click the <strong>Player Settings</strong> button.</p>
+<p><img alt="Environment Image" src="img/26fd8699131273e1.png"></p>
+<p>The player settings should appear on the rightmost column on the screen. In <code>Players Settings</code>, you must select the <code>Other Settings</code> tab. Within this tab, you are required to change the <code>Package Name</code> just as you would in Android Studio. Below the package name you need to change the minimum API level and target API level.</p>
+<p>ARCore is available on Android 7.0 (Nougat) and higher devices. Set the Minimum API level to Android 7.0 (API level 24). For Target API Level, set it to Automatic (highest installed).</p>
+<p><img alt="Player Settings Image" src="img/96be9f7682be2f66.png"></p>
+<p>We&#39;re not quite done yet. In the Player Settings, scroll down until you see the tab <code>XR Settings</code>. In the XR Settings, check the <strong>ARCore Supported</strong> box.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create the Scene" duration="0">
+        <h2>Add ARCore Device</h2>
+<p>In order to create the scene properly, we first need to import the ARCore SDK package. We have incorporated the SDK into the starter code package you downloaded from the Github. To do so, navigate to <code>Assets/Import Package/Custom Package</code> and find the CS4518 package in the File Explorer. When you import the package, make sure all the items are pre-checked. This will put all the contents of the package to the Assets folder of your project.</p>
+<p>Next, use the search bar above your project directory hierarchy to find the ARCore Device. Drag this into your scene, and then delete the main camera.</p>
+<p>Once you have added the ARCore Device to the scene, you need to set the proper configuration for the device. to do so, go to <code>Assets -&gt; prefabs</code> and drag <code>AugmentedImagesSessionConfig</code> into the Device Session variable in ARCore Device.</p>
+<p><img alt="ARCore Device" src="img/f0f4822bb30b73bd.png"></p>
+<h2>Add Scene Controller</h2>
+<p>The next step is to add a scene controller that will be used to coordinate between ARCore and Unity.</p>
+<p>First, in your project directory hierarchy, navigate to <code>Assets -&gt; Prefabs</code> and find the prefab called canvas. Drag it into your scene. Next, create an empty game object in your scene heirarchy by selecting <code>Create -&gt; Create Empty</code> and change its name to SceneController.</p>
+<p>Search for the script called AugmentedImageController.cs in your project directory hierarchy, and drag it onto SceneController. Then, in <code>Assets -&gt; prefabs</code>, drag the <code>AugmentedImageVisualizer</code> prefab into the <code>Augmented Image Visualizer Prefab</code> variable under the script section of your SceneController. Also in this script, drag in the <code>FitToScanOverlay</code>, a child of canvas, from your scene to <code>Fit To Scan Overlay</code>.</p>
+<p><img alt="Scene Controller" src="img/51f2eab1ac1d62d8.PNG"></p>
+<h2>Add Event System</h2>
+<p>Next, go to <code>Create -&gt; UI -&gt; Event System</code>. This will automatically add the event to the scene.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Add Image Database" duration="0">
+        <p>Next, we need to add an Image Target to our image target database. This database allows multiple image targets to display the same visualization. Thankfully, the ARCore SDK includes a basic database for us to use. To find this database, search in the project hierarchy for &#34;Example database&#34; and click on the Unity object that appears.</p>
+<p>If your database does not already include a picture, we have provided an image file of the WPI logo in <code>Assets -&gt; prefabs</code> for you to use. Simply click select on the empty image and look for the WPI logo in the box that appears! Images with unique patterns and contrasting colors work best. The database will automatically give you a score for how good of a target your image is. You should aim to use images with a score of 85 or above.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Make the Cube Rotate" duration="0">
+        <p>This next step is just to add a little pizzazz to our project.</p>
+<p>In the project hierarchy, under <code>Assets</code> create a folder named <code>Scripts</code> and create a new C# file. If you have Visual Studio installed, this should pull up the IDE, where you can start writing the script. Otherwise, pull up your favorite text editor and navigate to the file in your Unity project. Outside of the class, make sure you have the following lines:</p>
+<p><img alt="Rotation Imports" src="img/a5f0d60a591254ab.png"></p>
+<p>Inside the class, you should see a Start function and an Update function. We do not need to do any initialization for this script, so we can ignore the Start function. If you want, you can even delete it. The Update function will run once per frame, so this is where we need to write our code to make the cube spin. Add the following line:</p>
+<pre><code>transform.Rotate(Vector3.up, speed * Time.deltaTime);
+</code></pre>
+<p>Finally, we need to declare and set the variable speed within the class. This variable should be public so it can be easily updated from inside the editor. It should be a float, and you can set the value to whatever you want, we reccommend starting with 100. Experiment with different values and see what you like.</p>
+<p>So now we have a script for rotating any object, but now we need to attach it to the cube. Save the file and navigate back to the Unity screen. Unity makes this part really simple. All you need to do is navigate to the script in your assets/scripts folder, and drag it onto the cube within the scene. In you scene hierarchy click on the Scene Controller, then double click on AugmentedImageVisualizer. Finally double click on the cube. Then drag the script from <code>assets/scripts</code> onto the cube and type 100 into the speed variable.</p>
+<p>Finally you must add a second cube to your screen. to do so, go to <code>Assets/prefabs</code> and drag the cube into the scene. Make sure its scale is (0.05,0.05,0.05) and it&#39;s position is (0,0,0).</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Export the Code" duration="0">
+        <h2>Set up Your Phone</h2>
+<p>The next step in this project is to export the code to your Android device. To do so, we must enable developer options and USB debugging on the device. Go to <code>Settings -&gt; Systems -&gt; About Phone</code>. On the screen, there should be text that says <strong>Build Number</strong>. You need to click on this <strong>seven times</strong>. This will enable developer mode. I know it&#39;s weird. Just do it. If you back out to the <code>Settings</code> main page, there should now be an option called <code>Developer Options</code>. Next, you should scroll down a little and enable USB debugging.</p>
+<p><img alt="Phone Configuration" src="img/91efc69d96177a95.png"></p>
+<h2>Connect your Phone to Your Computer</h2>
+<p>Use a data cable to connect your device, and make sure your computer recognizes the phone that is connected.</p>
+<h2>Export</h2>
+<p>Finally, in the Unity <code>Build Settings</code> window, click <strong>Build and Run</strong>.</p>
+<p><img alt="Build Settings" src="img/90bbcf7b82e224e5.png"></p>
+<p>Make sure to click on the correct scene at the top, which is the one you have building from. Then on the bottom left, select the platform to be Android. You should now be able to click <strong>Build and Run</strong>, which creates an Android APK.</p>
+<p>You can now click on the app that is installed on your device to launch it. You should see an Unity screen when loading and then see the world through the camera. Open the given WPI logo file on your computer screen or print it out. Center the picture target inside the brackets on the phone&#39;s screen and watch your cube appear!</p>
+<h2>More Information</h2>
+<p>More information about ARCore can be found at google&#39;s website: https://developers.google.com/ar/develop/unity/quickstart-android and https://developers.google.com/ar/develop/unity/augmented-images/</p>
+<p>and at unity&#39;s website: https://unity3d.com/partners/google/arcore</p>
+<p>ARCore SDK for Unity was utilized in the creation of this project and tutorial.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

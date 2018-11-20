@@ -1,0 +1,22 @@
+{
+  "environment": "web",
+  "source": "Team1051TopicSurvey.md",
+  "format": "html",
+  "prefix": "../../",
+  "mainga": "UA-49880327-14",
+  "updated": "2018-11-20T07:06:24-05:00",
+  "id": "ts1051",
+  "duration": 0,
+  "title": "Amazon Lex Tutorial - By Team1051",
+  "author": "Georgie Cromwell, Benjamin Nickerson, Robert Scalfani",
+  "summary": "CS4518 Topic Survey: Amazon Lex",
+  "theme": "",
+  "status": [
+    "draft"
+  ],
+  "category": [
+    "common"
+  ],
+  "tags": [],
+  "url": "ts1051"
+}

@@ -1,0 +1,264 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>RecyclerView - by Team 1009</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="RecyclerView - by Team 1009"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Introduction" duration="0">
+        <p><a href="https://developer.android.com/reference/android/support/v7/widget/RecyclerView" target="_blank">RecyclerView</a> is a flexible view structure in Android that allows a developer to easier and efficiently show a scrollable list. This view provides a limited window into a large data set without taking up too much memory or storage.</p>
+<h2><strong>What are some uses of RecyclerView?</strong></h2>
+<ul>
+<li>Handling the view of any dataset where the total number of objects is either unknown or unlimited.</li>
+<li>Efficiently handling and releasing memory when handles large datasets.</li>
+<li>Asynchronous background loading of multiple objects.</li>
+<li>Showing lists that are based on dynamic server-based data.</li>
+</ul>
+<h2><strong>What you will build</strong></h2>
+<h2 class="checklist"><strong>What you&#39;ll learn</strong></h2>
+<ul class="checklist">
+<li>How to use the RecyclerView</li>
+</ul>
+<h2><strong>What you&#39;ll need</strong></h2>
+<ul>
+<li>Some text editor or Android Studio.</li>
+<li>10 minutes</li>
+</ul>
+<p>This codelab is focused on RecyclerView Use. Non-relevant concepts and code blocks are glossed over and are provided for you to simply copy and paste.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Getting set up" duration="0">
+        <h2><strong>Create a New Project</strong></h2>
+<ul>
+<li>Create a new project.</li>
+</ul>
+<h2><strong>Adding in the required Dependencies</strong></h2>
+<ul>
+<li>Navigate to the build.Gradle (app) and add the following dependency.</li>
+</ul>
+<pre><code>implementation &#39;com.android.support:recyclerview-v7:27.1.1&#39;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting up the XML Layouts" duration="0">
+        <h2><strong>Create layout file for RecyclerView element</strong></h2>
+<ul>
+<li>Create a new file called ‘list_item.xml&#39; in the layout folder (path -&gt; app/src/main/res/layout)</li>
+<li>Create a TextView element in the new layout file.</li>
+<li>RecyclerView will use this TextView to display strings from the string array.</li>
+<li>Assign the TextView the id &#34;row_item&#34;</li>
+</ul>
+<pre><code>&lt;TextView
+    android:id=&#34;@+id/row_item&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;50dp&#34;
+    android:gravity=&#34;center&#34;
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;/&gt;
+</code></pre>
+<h2><strong>Layout file for RecyclerView</strong></h2>
+<ul>
+<li>Open activity_main.xml in the layout folder</li>
+<li>Add a RecyclerView element under the root xml tag (in this case LinearLayout)</li>
+<li>Assign the RecyclerView the id &#34;item_list&#34;</li>
+<li>Add a scrollbars attribute to the RecyclerView as shown in the example below</li>
+</ul>
+<pre><code>&lt;android.support.v7.widget.RecyclerView
+        android:id=&#34;@+id/item_list&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;
+        android:scrollbars=&#34;vertical&#34;
+        /&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Writing the List Adapter" duration="0">
+        <h2>An important part of a recycler view is a separate class called an Adapter.</h2>
+<h2>The adapter creates views for items and replaces the content of views that are no longer needed with new data.</h2>
+<ul>
+<li>Create a new java class named MyAdapter</li>
+<li>For properties, give a private ArrayList of strings, named mDataset, and an int named listItemLayout</li>
+<li>Define a simple public constructor that takes an arraylist of strings and an int and sets mDataset and listItemLayout to the given values</li>
+</ul>
+<h2>We need an inner class called a ViewHolder</h2>
+<ul>
+<li>Create a public static inner class named MyViewHolder</li>
+<li>have it extend RecyclerView.ViewHolder</li>
+<li>Have it implement View.OnClickListener</li>
+<li>For properties, give a public TextView mTextView</li>
+<li>Define a constructor that takes a View itemView as an argument</li>
+<li>Call super(itemView)</li>
+<li>Set the onClickListener of itemView to this</li>
+<li>Set mTextView to itemView.findViewById, looking for the row_item we created</li>
+<li>Override the onClick method so it gives a custom message</li>
+</ul>
+<pre><code>    public static class MyViewHolder extends RecyclerView.ViewHolder {
+        public TextView mTextView;
+        public MyViewHolder(View itemView){
+            super(itemView);
+            itemView.setOnCLickListener(this);
+            mTextView = (TextView) itemView.findViewById(R.id.row_item);
+        }
+        Public void onClick(View view){
+            Log.d(&#34;onclick&#34;, &#34;onClick &#34; + getLayoutPosition() + &#34; &#34; + mTextView.getText());
+    }
+</code></pre>
+<h2>Now that we have our inner class defined, we can extend MyAdapter.</h2>
+<ul>
+<li>MyAdapter should extend RecyclerView.Adapter, and it&#39;s type should be MyAdapter.MyViewHolder</li>
+</ul>
+<pre><code>    public class MyAdapter extends 
+    RecyclerView.Adapter&lt;MyAdapter.MyViewHolder&gt;{
+    private String[] mDataSet;
+    Private int listItemLayout;
+...
+}
+</code></pre>
+<h2>Now that we have extended RecyclerView.Adapter, we must override the inherited methods to complete the Adapter class.</h2>
+<ul>
+<li>Override getItemCount(), onBindViewHolder(), and onCreateViewHolder()</li>
+<li>getItemCount() is a simple method that returns the number of items in the data set as an int.</li>
+</ul>
+<pre><code>    @Override
+    public int getItemCount(){
+        return mDataSet.size();
+    }
+</code></pre>
+<ul>
+<li>onBindViewHolder is a void method that takes a ViewHolder (such as MyViewHolder)  and an int position. We set the text inside the Holder to the text of the mDataSet at the given position</li>
+</ul>
+<pre><code>    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position){
+        holder.mTextView.setText(mDataSet.get(position));
+    }
+</code></pre>
+<ul>
+<li>The Final method we must override is onCreateViewHolder, which is of type MyAdapter.MyViewHolder. It takes a ViewGroup and an int viewType as arguments. When we want to create a ViewHolder, we create a textview from the current context and make a new MyViewHolder with the created textview as the argument.</li>
+</ul>
+<pre><code>    @Override
+    public MyAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+        View v =  LayoutInflater.from(parent.getContext()).inflate(listItemLayout, parent, false);
+        MyViewHolder vh = new MyViewHolder(t);
+        return vh;
+    }
+</code></pre>
+<h2>With these methods implemented, the Adapter class and its ViewHolder inner class are complete.</h2>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting up The MainActivity" duration="0">
+        <h2><strong>In the onCreate() method</strong></h2>
+<ul>
+<li>Create a String list or array and populate it.</li>
+</ul>
+<pre><code>// Initializing list
+ArrayList&lt;String&gt; itemList = new ArrayList&lt;String&gt;();
+
+// Populating list items
+for(int i=0; i&lt;100; i++) {
+    itemList.add(&#34;Item &#34; + i);
+}
+</code></pre>
+<ul>
+<li>Create an instance of the custom adapter you created</li>
+<li>Use R.layout.list_item as the first argument in the adapter constructor. This imports list_item.xml into the adapter</li>
+<li>Use the String list or array you created as the second argument for the adapter constructor.</li>
+</ul>
+<pre><code>// Creating adapter instance
+        MyAdapter itemArrayAdapter = new MyAdapter(R.layout.list_item, itemList);
+</code></pre>
+<ul>
+<li>Create a RecyclerView object and assign it to the RecyclerView element created in activity_main.xml (in this case R.id.recyclerView)</li>
+</ul>
+<pre><code>RecyclerView recyclerView = (RecyclerView) findViewById(R.id.item_list);
+</code></pre>
+<ul>
+<li>Finally use .setAdapter() to import the custom adapter object into the RecyclerView object</li>
+</ul>
+<pre><code>recyclerView.setLayoutManager(new LinearLayoutManager(this));
+recyclerView.setItemAnimator(new DefaultItemAnimator());
+recyclerView.setAdapter(itemArrayAdapter);
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Testing" duration="0">
+        <h2><strong>Test your application</strong></h2>
+<p>Test your application on you Android Device of AVD. Make sure your list is scrollable and that you can scroll to string 99. Show one of us you application before moving on and discussing the extra work.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary" duration="0">
+        <p>RecyclerView is an efficient tool for displaying portions of a much larger dataset without having to hold the entire dataset in memory. Although it requires the use of extra dependencies as well as building a custom adapter, the performance payoff is well worth it.</p>
+<p><br><br>**Remember**: This tutorial has only taken you through the basic of using a RecyclerView. There are many other features out there that can make RecyclerView even more powerful.<br></p>
+<h2><strong>Extra Work</strong></h2>
+<p>If you completed this tutorial and have some extra time consider how you would complete or actually complete the following tasks.</p>
+<ul>
+<li>Instead of just String consider how one would display both a picture and a description list inside the RecyclerView.</li>
+<li>Instead of having the entire list beforehand, when and where would be the best location to make a request to get more of the list.</li>
+<li>Instead of having a set view for each shown object, how would one display a list of different views.</li>
+<li>How would one make this list searchable? (Hint. Lookup SearchView, how would this fit into the application you have written?).</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

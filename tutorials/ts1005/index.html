@@ -1,0 +1,969 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Topic Survey: Voice Recognition and Colorwaves - by Team 1005</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Topic Survey: Voice Recognition and Colorwaves - by Team 1005"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>We&#39;re going to make an app called &#34;Colorwaves&#34;. It will let you control the color of your screen purely from your voice.</p>
+<p>Prerequisites:</p>
+<ul>
+<li>Android Studio 3.2</li>
+<li>Android physical or virtual devices API 27</li>
+<li>Google Cloud Account</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Starter Code" duration="0">
+        <p>If you do not have the starter code android files, please follow the steps to make the base application. If you have the code, import it as a project in Android Studio and feel free to move to the next section.</p>
+<p><strong>Step 1:</strong> Make a new project called Colorwaves</p>
+<p><strong>Step 2:</strong> Select Basic Activity</p>
+<p><strong>Step 3:</strong> Make a class called <strong>GoogleCredentialsInterceptor</strong> using the code below:</p>
+<pre><code>import com.google.auth.Credentials;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+
+import io.grpc.CallOptions;
+import io.grpc.Channel;
+import io.grpc.ClientCall;
+import io.grpc.ClientInterceptor;
+import io.grpc.ClientInterceptors;
+import io.grpc.Metadata;
+import io.grpc.MethodDescriptor;
+import io.grpc.Status;
+import io.grpc.StatusException;
+
+public class GoogleCredentialsInterceptor implements ClientInterceptor {
+
+    private final Credentials mCredentials;
+
+    private Metadata mCached;
+
+    private Map&lt;String, List&lt;String&gt;&gt; mLastMetadata;
+
+    GoogleCredentialsInterceptor(Credentials credentials) {
+        mCredentials = credentials;
+    }
+
+    @Override
+    public &lt;ReqT, RespT&gt; ClientCall&lt;ReqT, RespT&gt; interceptCall(final MethodDescriptor&lt;ReqT, RespT&gt; method, CallOptions callOptions, final Channel next) {
+        return new ClientInterceptors.CheckedForwardingClientCall&lt;ReqT, RespT&gt;(
+                next.newCall(method, callOptions)) {
+            @Override
+            protected void checkedStart(Listener&lt;RespT&gt; responseListener, Metadata headers)
+                    throws StatusException {
+                Metadata cachedSaved;
+                URI uri = serviceUri(next, method);
+                synchronized (this) {
+                    Map&lt;String, List&lt;String&gt;&gt; latestMetadata = getRequestMetadata(uri);
+                    if (mLastMetadata == null || mLastMetadata != latestMetadata) {
+                        mLastMetadata = latestMetadata;
+                        mCached = toHeaders(mLastMetadata);
+                    }
+                    cachedSaved = mCached;
+                }
+                headers.merge(cachedSaved);
+                delegate().start(responseListener, headers);
+            }
+        };
+    }
+
+    /**
+     * Generate a JWT-specific service URI. The URI is simply an identifier with enough
+     * information for a service to know that the JWT was intended for it. The URI will
+     * commonly be verified with a simple string equality check.
+     */
+    private URI serviceUri(Channel channel, MethodDescriptor&lt;?, ?&gt; method)
+            throws StatusException {
+        String authority = channel.authority();
+        if (authority == null) {
+            throw Status.UNAUTHENTICATED
+                    .withDescription(&#34;Channel has no authority&#34;)
+                    .asException();
+        }
+        // Always use HTTPS, by definition.
+        final String scheme = &#34;https&#34;;
+        final int defaultPort = 443;
+        String path = &#34;/&#34; + MethodDescriptor.extractFullServiceName(method.getFullMethodName());
+        URI uri;
+        try {
+            uri = new URI(scheme, authority, path, null, null);
+        } catch (URISyntaxException e) {
+            throw Status.UNAUTHENTICATED
+                    .withDescription(&#34;Unable to construct service URI for auth&#34;)
+                    .withCause(e).asException();
+        }
+        // The default port must not be present. Alternative ports should be present.
+        if (uri.getPort() == defaultPort) {
+            uri = removePort(uri);
+        }
+        return uri;
+    }
+
+    private URI removePort(URI uri) throws StatusException {
+        try {
+            return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), -1 /* port */,
+                    uri.getPath(), uri.getQuery(), uri.getFragment());
+        } catch (URISyntaxException e) {
+            throw Status.UNAUTHENTICATED
+                    .withDescription(&#34;Unable to construct service URI after removing port&#34;)
+                    .withCause(e).asException();
+        }
+    }
+
+    private Map&lt;String, List&lt;String&gt;&gt; getRequestMetadata(URI uri) throws StatusException {
+        try {
+            return mCredentials.getRequestMetadata(uri);
+        } catch (IOException e) {
+            throw Status.UNAUTHENTICATED.withCause(e).asException();
+        }
+    }
+
+    private static Metadata toHeaders(Map&lt;String, List&lt;String&gt;&gt; metadata) {
+        Metadata headers = new Metadata();
+        if (metadata != null) {
+            for (String key : metadata.keySet()) {
+                Metadata.Key&lt;String&gt; headerKey = Metadata.Key.of(
+                        key, Metadata.ASCII_STRING_MARSHALLER);
+                for (String value : metadata.get(key)) {
+                    headers.put(headerKey, value);
+                }
+            }
+        }
+        return headers;
+    }
+
+}
+</code></pre>
+<p><strong>Step 4:</strong> Make a class called <strong>VoiceRecorder</strong>. The code can be found below.</p>
+<pre><code>/*
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.support.annotation.NonNull;
+
+
+/**
+ * Continuously records audio and notifies the {@link VoiceRecorder.Callback} when voice (or any
+ * sound) is heard.
+ *
+ * &lt;p&gt;The recorded audio format is always {@link AudioFormat#ENCODING_PCM_16BIT} and
+ * {@link AudioFormat#CHANNEL_IN_MONO}. This class will automatically pick the right sample rate
+ * for the device. Use {@link #getSampleRate()} to get the selected value.&lt;/p&gt;
+ */
+public class VoiceRecorder {
+
+    private static final int[] SAMPLE_RATE_CANDIDATES = new int[]{16000, 11025, 22050, 44100};
+
+    private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+
+    private static final int AMPLITUDE_THRESHOLD = 1500;
+
+    private static final int SPEECH_TIMEOUT_MILLIS = 2000;
+    private static final int MAX_SPEECH_LENGTH_MILLIS = 30 * 1000;
+
+    public static abstract class Callback {
+
+        /**
+         * Called when the recorder starts hearing voice.
+         */
+        public void onVoiceStart() {
+        }
+
+        /**
+         * Called when the recorder is hearing voice.
+         *
+         * @param data The audio data in {@link AudioFormat#ENCODING_PCM_16BIT}.
+         * @param size The size of the actual data in {@code data}.
+         */
+        public void onVoice(byte[] data, int size) {
+        }
+
+        /**
+         * Called when the recorder stops hearing voice.
+         */
+        public void onVoiceEnd() {
+        }
+    }
+
+    private final Callback mCallback;
+
+    private AudioRecord mAudioRecord;
+
+    private Thread mThread;
+
+    private byte[] mBuffer;
+
+    private final Object mLock = new Object();
+
+    /** The timestamp of the last time that voice is heard. */
+    private long mLastVoiceHeardMillis = Long.MAX_VALUE;
+
+    /** The timestamp when the current voice is started. */
+    private long mVoiceStartedMillis;
+
+    public VoiceRecorder(@NonNull Callback callback) {
+        mCallback = callback;
+    }
+
+    /**
+     * Starts recording audio.
+     *
+     * &lt;p&gt;The caller is responsible for calling {@link #stop()} later.&lt;/p&gt;
+     */
+    public void start() {
+        // Stop recording if it is currently ongoing.
+        stop();
+        // Try to create a new recording session.
+        mAudioRecord = createAudioRecord();
+        if (mAudioRecord == null) {
+            throw new RuntimeException(&#34;Cannot instantiate VoiceRecorder&#34;);
+        }
+        // Start recording.
+        mAudioRecord.startRecording();
+        // Start processing the captured audio.
+        mThread = new Thread(new ProcessVoice());
+        mThread.start();
+    }
+
+    /**
+     * Stops recording audio.
+     */
+    public void stop() {
+        synchronized (mLock) {
+            dismiss();
+            if (mThread != null) {
+                mThread.interrupt();
+                mThread = null;
+            }
+            if (mAudioRecord != null) {
+                mAudioRecord.stop();
+                mAudioRecord.release();
+                mAudioRecord = null;
+            }
+            mBuffer = null;
+        }
+    }
+
+    /**
+     * Dismisses the currently ongoing utterance.
+     */
+    public void dismiss() {
+        if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
+            mLastVoiceHeardMillis = Long.MAX_VALUE;
+            mCallback.onVoiceEnd();
+        }
+    }
+
+    /**
+     * Retrieves the sample rate currently used to record audio.
+     *
+     * @return The sample rate of recorded audio.
+     */
+    public int getSampleRate() {
+        if (mAudioRecord != null) {
+            return mAudioRecord.getSampleRate();
+        }
+        return 0;
+    }
+
+    /**
+     * Creates a new {@link AudioRecord}.
+     *
+     * @return A newly created {@link AudioRecord}, or null if it cannot be created (missing
+     * permissions?).
+     */
+    private AudioRecord createAudioRecord() {
+        for (int sampleRate : SAMPLE_RATE_CANDIDATES) {
+            final int sizeInBytes = AudioRecord.getMinBufferSize(sampleRate, CHANNEL, ENCODING);
+            if (sizeInBytes == AudioRecord.ERROR_BAD_VALUE) {
+                continue;
+            }
+            final AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                    sampleRate, CHANNEL, ENCODING, sizeInBytes);
+            if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+                mBuffer = new byte[sizeInBytes];
+                return audioRecord;
+            } else {
+                audioRecord.release();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Continuously processes the captured audio and notifies {@link #mCallback} of corresponding
+     * events.
+     */
+    private class ProcessVoice implements Runnable {
+
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (mLock) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+                    final int size = mAudioRecord.read(mBuffer, 0, mBuffer.length);
+                    final long now = System.currentTimeMillis();
+                    if (isHearingVoice(mBuffer, size)) {
+                        if (mLastVoiceHeardMillis == Long.MAX_VALUE) {
+                            mVoiceStartedMillis = now;
+                            mCallback.onVoiceStart();
+                        }
+                        mCallback.onVoice(mBuffer, size);
+                        mLastVoiceHeardMillis = now;
+                        if (now - mVoiceStartedMillis &gt; MAX_SPEECH_LENGTH_MILLIS) {
+                            end();
+                        }
+                    } else if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
+                        mCallback.onVoice(mBuffer, size);
+                        if (now - mLastVoiceHeardMillis &gt; SPEECH_TIMEOUT_MILLIS) {
+                            end();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void end() {
+            mLastVoiceHeardMillis = Long.MAX_VALUE;
+            mCallback.onVoiceEnd();
+        }
+
+        private boolean isHearingVoice(byte[] buffer, int size) {
+            for (int i = 0; i &lt; size - 1; i += 2) {
+                // The buffer has LINEAR16 in little endian.
+                int s = buffer[i + 1];
+                if (s &lt; 0) s *= -1;
+                s &lt;&lt;= 8;
+                s += Math.abs(buffer[i]);
+                if (s &gt; AMPLITUDE_THRESHOLD) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+}
+</code></pre>
+<p><strong>Step 5:</strong> Make a class called <strong>SpeechAPI</strong>. The code can be found below.</p>
+<pre><code>import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.util.Log;
+
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.speech.v1.RecognitionConfig;
+import com.google.cloud.speech.v1.SpeechGrpc;
+import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
+import com.google.cloud.speech.v1.StreamingRecognitionConfig;
+import com.google.cloud.speech.v1.StreamingRecognitionResult;
+import com.google.cloud.speech.v1.StreamingRecognizeRequest;
+import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+import com.google.protobuf.ByteString;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.grpc.ManagedChannel;
+import io.grpc.internal.DnsNameResolverProvider;
+import io.grpc.okhttp.OkHttpChannelProvider;
+import io.grpc.stub.StreamObserver;
+
+
+public class SpeechAPI {
+
+    public static final List&lt;String&gt; SCOPE = Collections.singletonList(&#34;https://www.googleapis.com/auth/cloud-platform&#34;);
+    public static final String TAG = &#34;SpeechAPI&#34;;
+
+    private static final String PREFS = &#34;SpeechService&#34;;
+    private static final String PREF_ACCESS_TOKEN_VALUE = &#34;access_token_value&#34;;
+    private static final String PREF_ACCESS_TOKEN_EXPIRATION_TIME = &#34;access_token_expiration_time&#34;;
+
+    /**
+     * We reuse an access token if its expiration time is longer than this.
+     */
+    private static final int ACCESS_TOKEN_EXPIRATION_TOLERANCE = 30 * 60 * 1000; // thirty minutes
+
+    /**
+     * We refresh the current access token before it expires.
+     */
+    private static final int ACCESS_TOKEN_FETCH_MARGIN = 60 * 1000; // one minute
+
+    private static final String HOSTNAME = &#34;speech.googleapis.com&#34;;
+    private static final int PORT = 443;
+    private static Handler mHandler;
+
+    private final ArrayList&lt;Listener&gt; mListeners = new ArrayList&lt;&gt;();
+
+    private final StreamObserver&lt;StreamingRecognizeResponse&gt; mResponseObserver = new StreamObserver&lt;StreamingRecognizeResponse&gt;() {
+        @Override
+        public void onNext(StreamingRecognizeResponse response) {
+            String text = null;
+            boolean isFinal = false;
+            if (response.getResultsCount() &gt; 0) {
+                final StreamingRecognitionResult result = response.getResults(0);
+                isFinal = result.getIsFinal();
+                if (result.getAlternativesCount() &gt; 0) {
+                    final SpeechRecognitionAlternative alternative = result.getAlternatives(0);
+                    text = alternative.getTranscript();
+                }
+            }
+            if (text != null) {
+                for (Listener listener : mListeners) {
+                    listener.onSpeechRecognized(text, isFinal);
+                }
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            Log.e(TAG, &#34;Error calling the API.&#34;, t);
+        }
+
+        @Override
+        public void onCompleted() {
+            Log.i(TAG, &#34;API completed.&#34;);
+        }
+
+    };
+    private Context mContext;
+    private volatile AccessTokenTask mAccessTokenTask;
+    private final Runnable mFetchAccessTokenRunnable = new Runnable() {
+        @Override
+        public void run() {
+            fetchAccessToken();
+        }
+    };
+    private SpeechGrpc.SpeechStub mApi;
+    private StreamObserver&lt;StreamingRecognizeRequest&gt; mRequestObserver;
+
+    public SpeechAPI(Context mContext) {
+        this.mContext = mContext;
+        mHandler = new Handler();
+        fetchAccessToken();
+
+    }
+
+    public void destroy() {
+        mHandler.removeCallbacks(mFetchAccessTokenRunnable);
+        mHandler = null;
+        // Release the gRPC channel.
+        if (mApi != null) {
+            final ManagedChannel channel = (ManagedChannel) mApi.getChannel();
+            if (channel != null &amp;&amp; !channel.isShutdown()) {
+                try {
+                    channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, &#34;Error shutting down the gRPC channel.&#34;, e);
+                }
+            }
+            mApi = null;
+        }
+    }
+
+    private void fetchAccessToken() {
+        if (mAccessTokenTask != null) {
+            return;
+        }
+        mAccessTokenTask = new AccessTokenTask();
+        mAccessTokenTask.execute();
+    }
+
+    public void addListener(@NonNull Listener listener) {
+        mListeners.add(listener);
+    }
+
+    public void removeListener(@NonNull Listener listener) {
+        mListeners.remove(listener);
+    }
+
+    /**
+     * Starts recognizing speech audio.
+     *
+     * @param sampleRate The sample rate of the audio.
+     */
+    public void startRecognizing(int sampleRate) {
+        if (mApi == null) {
+            Log.w(TAG, &#34;API not ready. Ignoring the request.&#34;);
+            return;
+        }
+
+        // Configure the API
+        mRequestObserver = mApi.streamingRecognize(mResponseObserver);
+
+        StreamingRecognitionConfig streamingConfig = StreamingRecognitionConfig.newBuilder()
+                .setConfig(RecognitionConfig.newBuilder()
+                        .setLanguageCode(&#34;en-US&#34;)
+                        .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
+                        .setSampleRateHertz(sampleRate)
+                        .build()
+                )
+                .setInterimResults(true)
+                .setSingleUtterance(true)
+                .build();
+
+        StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setStreamingConfig(streamingConfig).build();
+        mRequestObserver.onNext(streamingRecognizeRequest);
+    }
+
+    /**
+     * Recognizes the speech audio. This method should be called every time a chunk of byte buffer
+     * is ready.
+     *
+     * @param data The audio data.
+     * @param size The number of elements that are actually relevant in the {@code data}.
+     */
+    public void recognize(byte[] data, int size) {
+        if (mRequestObserver == null) {
+            return;
+        }
+        // Call the streaming recognition API
+        mRequestObserver.onNext(StreamingRecognizeRequest.newBuilder()
+                .setAudioContent(ByteString.copyFrom(data, 0, size))
+                .build());
+    }
+
+    /**
+     * Finishes recognizing speech audio.
+     */
+    public void finishRecognizing() {
+        if (mRequestObserver == null) {
+            return;
+        }
+        mRequestObserver.onCompleted();
+        mRequestObserver = null;
+    }
+
+    public interface Listener {
+        //Called when a new piece of text was recognized by the Speech API.
+        void onSpeechRecognized(String text, boolean isFinal);
+    }
+
+    private class AccessTokenTask extends AsyncTask&lt;Void, Void, AccessToken&gt; {
+
+        @Override
+        protected AccessToken doInBackground(Void... voids) {
+
+            final SharedPreferences prefs = mContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            String tokenValue = prefs.getString(PREF_ACCESS_TOKEN_VALUE, null);
+            long expirationTime = prefs.getLong(PREF_ACCESS_TOKEN_EXPIRATION_TIME, -1);
+
+            // Check if the current token is still valid for a while
+            if (tokenValue != null &amp;&amp; expirationTime &gt; 0) {
+                if (expirationTime &gt; System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TOLERANCE) {
+                    return new AccessToken(tokenValue, new Date(expirationTime));
+                }
+            }
+
+            final InputStream stream = mContext.getResources().openRawResource(R.raw.credential);
+            try {
+                final GoogleCredentials credentials = GoogleCredentials.fromStream(stream).createScoped(SCOPE);
+                final AccessToken token = credentials.refreshAccessToken();
+                prefs.edit()
+                        .putString(PREF_ACCESS_TOKEN_VALUE, token.getTokenValue())
+                        .putLong(PREF_ACCESS_TOKEN_EXPIRATION_TIME, token.getExpirationTime().getTime())
+                        .apply();
+                return token;
+            } catch (IOException e) {
+                Log.e(TAG, &#34;Failed to obtain access token.&#34;, e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(AccessToken accessToken) {
+            mAccessTokenTask = null;
+            final ManagedChannel channel = new OkHttpChannelProvider()
+                    .builderForAddress(HOSTNAME, PORT)
+                    .nameResolverFactory(new DnsNameResolverProvider())
+                    .intercept(new GoogleCredentialsInterceptor(new GoogleCredentials(accessToken)
+                            .createScoped(SCOPE)))
+                    .build();
+            mApi = SpeechGrpc.newStub(channel);
+
+            // Schedule access token refresh before it expires
+            if (mHandler != null) {
+                mHandler.postDelayed(mFetchAccessTokenRunnable,
+                        Math.max(accessToken.getExpirationTime().getTime() - System.currentTimeMillis() - ACCESS_TOKEN_FETCH_MARGIN, ACCESS_TOKEN_EXPIRATION_TOLERANCE));
+            }
+        }
+    }
+}
+</code></pre>
+<p><strong>Step 6:</strong> Update the Project Gradle using the code below:</p>
+<pre><code>// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url &#39;https://maven.google.com/&#39;
+            name &#39;Google&#39;
+        }
+    }
+    dependencies {
+        classpath &#39;com.android.tools.build:gradle:2.3.3&#39;
+        classpath &#39;com.google.protobuf:protobuf-gradle-plugin:0.8.0&#39;
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url &#39;https://maven.google.com/&#39;
+            name &#39;Google&#39;
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+</code></pre>
+<p><strong>Step 7:</strong> Update the App Gradle using the code below:</p>
+<pre><code>apply plugin: &#39;com.android.application&#39;
+apply plugin: &#39;com.google.protobuf&#39;
+
+ext {
+    grpcVersion = &#39;1.4.0&#39;
+}
+android {
+    compileSdkVersion 26
+    buildToolsVersion &#34;26.0.0&#34;
+    defaultConfig {
+        applicationId &#34;[YOUR APPLICATION ID]&#34;
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 1
+        versionName &#34;1.0&#34;
+        testInstrumentationRunner &#34;android.support.test.runner.AndroidJUnitRunner&#34;
+
+        multiDexEnabled  true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile(&#39;proguard-android.txt&#39;), &#39;proguard-rules.pro&#39;
+        }
+    }
+    configurations.all {
+        resolutionStrategy.force &#39;com.google.code.findbugs:jsr305:3.0.2&#39;
+
+    }
+}
+protobuf {
+    protoc {
+        artifact = &#39;com.google.protobuf:protoc:3.3.0&#39;
+    }
+    plugins {
+        javalite {
+            artifact = &#34;com.google.protobuf:protoc-gen-javalite:3.0.0&#34;
+        }
+        grpc {
+            artifact = &#34;io.grpc:protoc-gen-grpc-java:${grpcVersion}&#34;
+        }
+    }
+    generateProtoTasks {
+        all().each { task -&gt;
+            task.plugins {
+                javalite {}
+                grpc {
+                    // Options added to --grpc_out
+                    option &#39;lite&#39;
+                }
+            }
+        }
+    }
+}
+
+
+dependencies {
+    compile fileTree(dir: &#39;libs&#39;, include: [&#39;*.jar&#39;])
+    androidTestCompile(&#39;com.android.support.test.espresso:espresso-core:2.2.2&#39;, {
+        exclude group: &#39;com.android.support&#39;, module: &#39;support-annotations&#39;
+    })
+    compile &#39;com.android.support:appcompat-v7:26.1.0&#39;
+    compile &#39;com.android.support.constraint:constraint-layout:1.0.2&#39;
+    testCompile &#39;junit:junit:4.12&#39;
+
+    compile &#39;com.jakewharton:butterknife:8.7.0&#39;
+    annotationProcessor &#39;com.jakewharton:butterknife-compiler:8.7.0&#39;
+
+    compile &#39;com.android.support:design:26.1.0&#39;
+
+
+    // gRPC
+    compile &#34;io.grpc:grpc-okhttp:$grpcVersion&#34;
+    compile &#34;io.grpc:grpc-protobuf-lite:$grpcVersion&#34;
+    compile &#34;io.grpc:grpc-stub:$grpcVersion&#34;
+    compile &#39;javax.annotation:javax.annotation-api:1.2&#39;
+    protobuf &#39;com.google.protobuf:protobuf-java:3.3.1&#39;
+
+    compile group: &#39;com.google.api.grpc&#39;, name: &#39;grpc-google-cloud-speech-v1&#39;, version: &#39;0.1.13&#39;
+
+    // OAuth2 for Google API
+    compile(&#39;com.google.auth:google-auth-library-oauth2-http:0.7.0&#39;) {
+        exclude module: &#39;httpclient&#39;
+    }
+
+    compile &#39;com.android.support:multidex:1.0.0&#39;
+    compile &#39;com.android.support:design:26.+&#39;
+
+}
+
+</code></pre>
+<p><strong>Step 8:</strong> Add audio and internet permissions to the manifest</p>
+<pre><code>    &lt;uses-permission android:name=&#34;android.permission.RECORD_AUDIO&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.INTERNET&#34; /&gt;
+</code></pre>
+<p><strong>Step 9:</strong> Replace the colors.xml file. These are going to be the colors we can recognize!<br><a href="https://drive.google.com/uc?export=download&id=1ci5otM9UZwphZ-4EZfgiO4p9Wmmo5x6G" target="_blank">Download colors.xml Here</a></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Google Speech API" duration="0">
+        <p>We&#39;re going to need to set up our google cloud and retrieve an API key.</p>
+<p>Go to the Google Cloud Platform <a href="https://console.cloud.google.com" target="_blank">console</a>.</p>
+<ol type="1">
+<li>Create a new Project<br><img alt="Create" src="img/2e72e6021e60978.png"></li>
+<li>Enable APIs and Servies<br><img alt="Enable" src="img/a836e78b8782324e.png"></li>
+<li>Add Cloud Speech API<br><img alt="Add API" src="img/d1d00ced7fb9dca0.png"></li>
+<li>Create credentials<br><img alt="Credentials" src="img/187398656714ef10.png"></li>
+<li>Assign the &#34;Owner&#34; role to the service<br><img alt="Role" src="img/50bbddf1dde5aa6.png"></li>
+</ol>
+<p>Once you have done this it will generate and download a JSON file. Rename this file to <code>credentials.json</code> and then create<br>a new directory in your project res directory called raw and add the json file there. Please note that in an actual application, you should never store credentials.json locally, but rather store the file in your server and obtain an access token from there.</p>
+<p><img alt="Raw" src="img/a61b51fb8b85a84b.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Adding Functionality" duration="0">
+        <p>Now it&#39;s time to start adding the functionality to change the background color!</p>
+<p>In the <code>content_main.xml</code>, let&#39;s give the constraint layout a name, so we can reference it using <code>layout = <br>(ConstraintLayout) findViewById(R.id.layout);</code>. Create this reference in <code>MainActivity.java</code>. Also feel free to get rid<br>of the &#34;Hello World&#34; text.</p>
+<p>Now let&#39;s go into the <code>activity_main.xml</code> and change the icon of the Floating Action Button to a mic. Find srcCompat in<br>the properties view of the Floating Action Button and change it to <code>ic_btn_speak_now</code>. Let&#39;s also change the backgroundTint of the button to RED, and the tint to WHITE.</p>
+<p><img alt="Layout" src="img/d971477d2c6c1ed9.png"></p>
+<p>Now even though we have uses-permission in our manifest, we should request audio on runtime. Let&#39;s add this to our <code>onCreate()</code> method.</p>
+<pre><code>if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+	ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_REQUEST_CODE);
+}
+</code></pre>
+<p>Putting our request code as a constant at the top of our class.</p>
+<p><code>private static final int RECORD_REQUEST_CODE = 101;</code></p>
+<p>Next we&#39;re going to set up our VoiceRecorder, which continuously records audio and notifies the link in the callback. We can send this audio to the Google Cloud Speech API using the code below. This should be added in our MainActivity class.</p>
+<pre><code>private final VoiceRecorder.Callback mVoiceCallback = new VoiceRecorder.Callback() {
+
+        @Override
+        public void onVoiceStart() {
+            if (speechAPI != null) {
+                speechAPI.startRecognizing(mVoiceRecorder.getSampleRate());
+            }
+        }
+
+        @Override
+        public void onVoice(byte[] data, int size) {
+            if (speechAPI != null) {
+                speechAPI.recognize(data, size);
+            }
+        }
+
+        @Override
+        public void onVoiceEnd() {
+            if (speechAPI != null) {
+                speechAPI.finishRecognizing();
+            }
+        }
+
+    };
+</code></pre>
+<p>Still in our MainActivity class, let&#39;s set up our SpeechAPI by adding a listener that will wait for speech to be recognized.</p>
+<pre><code>    private final SpeechAPI.Listener mSpeechServiceListener =
+            new SpeechAPI.Listener() {
+                @Override
+                public void onSpeechRecognized(final String text, final boolean isFinal) {
+                    processText(text);
+                    if (isFinal) {
+                        mVoiceRecorder.dismiss();
+                    }
+                }
+            };
+</code></pre>
+<p>Be sure to add fields for our SpeechAPI and VoiceRecorder objects:</p>
+<pre><code>SpeechAPI speechAPI = new SpeechAPI(this);
+</code></pre>
+<p>and</p>
+<pre><code>VoiceRecorder mVoiceRecorder = new VoiceRecorder(mVoiceCallback);
+</code></pre>
+<p>You might have noticed the error under the <code>processText()</code> function, since it currently doesn&#39;t exist! We need to process the text and then set the background to a color if it exists. So let&#39;s create that <code>processText()</code> function.</p>
+<p>Since each color in the <code>colors.xml</code> file is all-caps and only letters, we want to capitalize the letters and remove all whitespace from the string we obtained through the voice recognition so that we can compare them.</p>
+<pre><code>    private void processText(final String text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String newText = text.replaceAll(&#34;\\s+&#34;,&#34;&#34;);
+                layout.setBackgroundResource(getColorByName(newText.toUpperCase()));
+            }
+        });
+    }
+</code></pre>
+<p>Now we need to get the color by name from our colors.xml resource file. We use reflection to accomplish this, by accessing a field by its name as a string.</p>
+<pre><code>    public int getColorByName(String name) {
+        int colorId = 0;
+        try {
+            Class res = R.color.class;
+            Field field = res.getField(name);
+            colorId = field.getInt(null);
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        return colorId;
+    }
+</code></pre>
+<p>Now let&#39;s override <code>onStop()</code> to stop our speech recognition and voice recorder when we exit the app.</p>
+<pre><code>    @Override
+    protected void onStop() {
+        stopVoiceRecorder();
+
+        // Stop Cloud Speech API
+        speechAPI.removeListener(mSpeechServiceListener);
+        speechAPI.destroy();
+        speechAPI = null;
+
+        super.onStop();
+    }
+</code></pre>
+<p>We&#39;ll need to have the functions <code>startVoiceRecorder()</code> and <code>stopVoiceRecorder()</code>.</p>
+<pre><code>    private void startVoiceRecorder() {
+        if (mVoiceRecorder != null) {
+            mVoiceRecorder.stop();
+        }
+        mVoiceRecorder = new VoiceRecorder(mVoiceCallback);
+        mVoiceRecorder.start();
+    }
+
+    private void stopVoiceRecorder() {
+        if (mVoiceRecorder != null) {
+            mVoiceRecorder.stop();
+            mVoiceRecorder = null;
+        }
+    }
+</code></pre>
+<p>It&#39;s finally time to put all these together. We&#39;re going to call <code>startVoiceRecorder()</code> when our floating action button is pressed, and then <code>stopVoiceRecorder()</code> when it&#39;s pressed again just so the user can stop changing the color.</p>
+<p>Let&#39;s create a public variable <code>boolean flag = true;</code> so we know if the button has been pressed our not.</p>
+<p>Now we can get rid of the auto-generated snackbar in our FAB listener code and instead put:</p>
+<pre><code>            public void onClick(View view) {
+                if (flag){
+                    ViewCompat.setBackgroundTintList(fab, ColorStateList.valueOf(Color.parseColor(&#34;GREEN&#34;)));
+                    flag = false;
+                    startVoiceRecorder();
+                    speechAPI.addListener(mSpeechServiceListener);
+                } else {
+                    ViewCompat.setBackgroundTintList(fab, ColorStateList.valueOf(Color.parseColor(&#34;RED&#34;)));
+                    flag = true;
+                    speechAPI.removeListener(mSpeechServiceListener);
+                    stopVoiceRecorder();
+                }
+            }
+</code></pre>
+<p>Now we&#39;re ready to run it! When we click the floating action button, it should turn green and we can speak the colors.</p>
+<p>We can only recognize the colors in the <code>color.xml</code> file. Feel free to make your own creative color names and add them to the xml file with hex values for some more fun!</p>
+<p><img alt="Layout" src="img/29207daf56da1ff2.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary and Resources" duration="0">
+        <p>In this tutorial we created the Colorwaves app that uses Google Cloud Speech API to change the color of our background to whatever color the user has spoken.</p>
+<p>To learn more about the Google Speech API, please visit this <a href="https://cloud.google.com/speech-to-text/" target="_blank">page</a>.</p>
+<p>Part of the code from this tutorial was obtained from sample applications in the Google cloud <a href="https://cloud.google.com/speech-to-text/docs/samples" target="_blank">documentation</a>.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

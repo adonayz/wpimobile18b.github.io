@@ -1,0 +1,94 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Topic Survey: Mobile Image Cropping - by Team 1022</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Topic Survey: Mobile Image Cropping - by Team 1022"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Step 1: Adding Dependencies" duration="0">
+        <p>In app build.gradle, locate the dependencies section and add: <code>api &#39;com.edmodo:cropper:1.0.1&#39;</code></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2: UI Construction" duration="0">
+        <p>In activity_main.xml...</p>
+<ol type="1">
+<li>Add the following code:<pre><code>&lt;com.edmodo.cropper.CropImageView
+android:id=&#34;@+id/CropImageView&#34;
+android:layout_width=&#34;wrap_content&#34;
+android:layout_height=&#34;wrap_content&#34; /&gt;
+</code></pre>
+</li>
+<li>Edit the existing <em>ImageView</em> so that it starts off invisible by editing its properties in the &#34;Attributes&#34; bar.</li>
+<li>Add a button to your UI that will eventually be your &#34;crop&#34; button.</li>
+</ol>
+<h2>Step 3: Implement Cropping Functionality</h2>
+<p>In MainActivity.java...</p>
+<ol type="1">
+<li>In your existing <code>onActivityResult()</code>, replace the <em>ImageView</em> with a <em>CropImageView</em>:<br><code>CropImageView cropImageView = (CropImageView) findViewById(R.id.CropImageView);</code></li>
+<li>Create a function for your &#34;crop&#34; button. Here it is called <code>onClickCropButton()</code>.<br>In this function, retreive the image bitmap from the <em>CropImageView</em> object using <code>cropImageView.getCroppedImage();</code></li>
+<li>Set this image to your <em>ImageView</em> object using <code>setImageBitmap(&lt;croppedImageBitmap&gt;)</code>.<br>*Note: &lt;...&gt; indicate psuedocode</li>
+<li>Set the visibilities of the <em>ImageView</em> to visible and the <em>CroppedImageView</em> to invisible.<br><code>setVisibility(View.VISIBLE);</code> or <code>setVisibility(View.INVISIBLE);</code></li>
+</ol>
+<p>**For more information, please see https://github.com/edmodo/cropper/wiki.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="THE END :)" duration="0">
+        
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

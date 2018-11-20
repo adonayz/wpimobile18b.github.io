@@ -1,0 +1,20 @@
+{
+  "environment": "web",
+  "source": "Team1005TopicSurvey.md",
+  "format": "html",
+  "prefix": "../../",
+  "mainga": "UA-49880327-14",
+  "updated": "2018-11-20T06:43:43-05:00",
+  "id": "ts1005",
+  "duration": 0,
+  "title": "Topic Survey: Voice Recognition and Colorwaves - by Team 1005",
+  "author": "Kit, Jacob, Madeline",
+  "summary": "Colorwaves topic survey project",
+  "theme": "",
+  "status": null,
+  "category": null,
+  "tags": [
+    "android"
+  ],
+  "url": "ts1005"
+}

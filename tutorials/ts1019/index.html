@@ -1,0 +1,143 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Topic: Room Persistence Library - By Team 1019</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Topic: Room Persistence Library - By Team 1019"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Project Overview" duration="0">
+        <p>Room Persistence Library provides an abstract layer over SQLite, allowing for a<br>more fluid and robust database access. This topic is very relevant to mobile<br>computing due to the importance of communicating with databases. The use of a<br>SQL database makes it easier to store persistent information in a relational<br>format, but there is usually a large amount of overhead required in setting up a<br>database. This is especially an issue for smaller applications, where the<br>groundwork may not even be worth the benefits. The room persistence library does<br>much of the work for you, allowing developers to much quickly prototype and<br>develop SQL-based applications. Especially in a class like this, where we are<br>trying to cover a lot of material in a short time, it would be extremely<br>beneficial to spend less time developing SQL boilerplate and more time working<br>on the important or interesting parts of the application. In addition, in order<br>to train any sort of deep learning model, we will need a large set of training,<br>testing, validation data. Thus it is important that we have an easy way to<br>access our data such that we can continually update our model.</p>
+<p>In this codelab you will be finishing a small Grocery List application utilizing<br>a Room Database. You will be looking at how to set up an entity class, create a<br>Data Access Object(DAO), and how to initialize and add to your database. Please<br>utilize the starter code provided with submission.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Grocery Entity Class Set-up" duration="0">
+        <p>In Room library, you need to create an Entity. In Entity class you need to<br>define the set of related fields in your Table or more specifically define the<br>schema of your relational database. The Entity class allows more much<br>customization and declaration of your Database through annotations. Some are<br>listed for reference below.</p>
+<p><strong>Annotations (Class):</strong><em>\@Entity( annotations, ..., ...)</em></p>
+<table>
+<tr></tr>
+<tr><td colspan="1" rowspan="1"><p>primaryKeys = {&#34;field1&#34;,&#34;field2&#34;}</p>
+</td><td colspan="1" rowspan="1"><p>Define the Primary Keys in a Table</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>tableName = {&#34;name&#34;}</p>
+</td><td colspan="1" rowspan="1"><p>Uses this name for the Table instead of the Entity Class Name</p>
+</td></tr>
+</table>
+<p><strong>Annotations (Fields):</strong></p>
+<table>
+<tr></tr>
+<tr><td colspan="1" rowspan="1"><p>\@PrimaryKey</p>
+</td><td colspan="1" rowspan="1"><p>Sets the field to be the Primary Key of the DB</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@ColumnInfo</p>
+</td><td colspan="1" rowspan="1"><p>Defines the name of the field in the DB</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@NonNull</p>
+</td><td colspan="1" rowspan="1"><p>Sets the field to not be Null in the DB</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@Ignore</p>
+</td><td colspan="1" rowspan="1"><p>Notifies Room that this field should not be persisted</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>..</p>
+</td><td colspan="1" rowspan="1"><p><a href="https://developer.android.com/training/data-storage/room/defining-data" target="_blank">More Info..</a></p>
+</td></tr>
+</table>
+<p>You will need to navigate to the GroceryEntity class and add some information.<br>As you can see it currently only has fields for the id and name. You will need<br>to go ahead and add the entity information for quantity, notes, and filepath<br>fields as well as create the getters and setters. Please ensure you are<br>following the naming conventions used here as they are referenced in other<br>functions.</p>
+<p>Creating a DAO</p>
+<p>A <strong>DAO</strong> is an interface that defines the methods or search queries able to be<br>done on your DataBase. It binds a Query to each of your queries in which you<br>define. The DAO class provides a seamless and easily way of inserting, deleting<br>and updating your table. Explanations of some of the annotations are provided<br>below.</p>
+<table>
+<tr></tr>
+<tr><td colspan="1" rowspan="1"><p>\@Insert</p>
+</td><td colspan="1" rowspan="1"><p>Room Generates an implementation that inserts all DAO&#39;s into the table</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@Update</p>
+</td><td colspan="1" rowspan="1"><p>Uses a query to update all of the DAO&#39;s respectfully in the table based on their Primary Key</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@Delete</p>
+</td><td colspan="1" rowspan="1"><p>Removes all entities from a table based on the DAO&#39;s Primary Key</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>\@Query</p>
+</td><td colspan="1" rowspan="1"><p>Allows you to read/write to the Database based on your customized query.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>...</p>
+</td><td colspan="1" rowspan="1"><p><a href="https://developer.android.com/training/data-storage/room/accessing-data" target="_blank">More Info..</a></p>
+</td></tr>
+</table>
+<p>If your interested in learning more about DAO&#39;s check out the More Info link<br>that shows examples on how to inject your input into your queries, obtain direct<br>cursor access, query multiple tables, and more.</p>
+<p><img src="img/e7e3407e6a8baa42.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting up the Database Class" duration="0">
+        <p>In order to create and get the database we will be utilizing a singleton pattern<br>as highlighted here below. You will need to add this block of code to the<br>getDatabase function in the GroceryDatabase Class file. Note that we will be<br>using the singleton pattern here so we ensure that we never accidentally create<br>multiple instances of our database. Also note the annotation in the class<br>declaration. Room uses annotations to add metadata to a Java source file, they<br>can&#39;t affect the semantics of a program directly. This allows Room to be able to<br>check SQL queries at compile-time, which can save a lot of development time.</p>
+<p><img src="img/a445a6e865032b29.png"></p>
+<p>The outer If statement exists to check whether our Database has already been<br>initialized. As the GroceryDatabase is a Singleton, where one instance shall<br>only exists, it insures static access to the one instance of our<br>GroceryDatabase. The inner if statements provides a synchronized way of creating<br>our Database if it does not exist already. As multiple calls to this method<br>could potentially cause a synchronization problem.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Taking Room Further" duration="0">
+        <p>Now you should have a functioning app with the ability to add a grocery item to<br>the database without issue. However, right now once a grocery item is added<br>there is no way to get rid of it. With the time remaining in this topic survey<br>we encourage you to play around with the other associated methods with Room and<br>perhaps add delete or update functionality. Thanks for participating!</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="References" duration="0">
+        <p>Android Developer Documentation:<br>https://developer.android.com/training/data-storage/room/</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Amazon Lex Tutorial - By Team1051</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Amazon Lex Tutorial - By Team1051"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Requirements" duration="0">
+        <p><em>Note: Microphone does not always work with the AVD emulator (does not clearly pick up audio). You should use a physical android device to test this project.</em></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Project Setup" duration="0">
+        <ol type="1">
+<li>Create an empty Android Project and switch to the Project View and Navigate to App/Src/Main/Res/ and create a new Android Resource Directory with the resource type as raw. Name this new directory ‘raw&#39;.</li>
+<li>Create an AWS account if you don&#39;t already have one and then go to the &#34;mobile hub&#34; at https://console.aws.amazon.com/mobilehub/home?#/createwizard/?app=android</li>
+<li>In the &#34;Create a Project&#34; step of the mobile hub, enter in the name of your project and click next.</li>
+<li>Click &#34;Download Cloud Config&#34; to get the awsconfiguration.json file and put into the new ‘raw&#39; directory.</li>
+<li>In your code, Insert the following code into the AndroidManifest.xml file outside of the application tag:<pre><code>&lt;uses-permission android:name=&#34;android.permission.INTERNET&#34;/&gt;
+&lt;uses-permission android:name=&#34;android.permission.ACCESS_NETWORK_STATE&#34;/&gt;
+</code></pre>
+</li>
+<li>And add the following dependencies to your app/build.gradle and sync:<pre><code>dependencies {
+    implementation (&#39;com.amazonaws:aws-android-sdk-mobile-client:2.7.+@aar&#39;) { transitive = true }
+}
+</code></pre>
+</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Connecting Amazon Lex to Android" duration="0">
+        <ol type="1">
+<li>Add this code inside your main activity class and when prompted press ‘alt-enter&#39; to automatically add the two necessary import statements.<pre><code>import com.amazonaws.mobile.client.AWSMobileClient;
+    
+  public class YourMainActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    
+        AWSMobileClient.getInstance().initialize(this, new AWSStartupHandler() {
+            @Override
+            public void onComplete(AWSStartupResult awsStartupResult) {
+                Log.d(&#34;YourMainActivity&#34;, &#34;AWSMobileClient is instantiated and you are connected to AWS!&#34;);
+            }
+        }).execute();
+    
+        // More onCreate code ...
+    }
+  }
+</code></pre>
+</li>
+<li>Run, and check in Logcat to make sure AWS connected successfully. You can ‘ctrl-f&#39; for ‘AWSMobileClient&#39; to find it. You should be able to see a connection successful statement.</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Adding Amazon Lex Chat Bot" duration="0">
+        <ol type="1">
+<li>Navigate back to the AWS mobile hub and select your project that you created in step three (it should be listed). Scroll down and choose to add a conversation bot with the type of ‘Make an Appointment&#39;</li>
+<li>Fill in the bot name and the other blanks and click create new bot.</li>
+<li>Now return to the Project Details page and click integrate (next to the ‘Backend Features&#39; are working on) to integrate the chat bot with the app.</li>
+<li>Now, download the new awsconfiguration.json file by click ‘Download Cloud Config&#39; with the new lex connection and replace the old one in the ‘raw&#39; directory in your project.</li>
+<li>Add in to the app/build.gradle add in to the dependences and sync:<pre><code>implementation (&#39;com.amazonaws:aws-android-sdk-lex:2.7.+@aar&#39;) { transitive = true }
+</code></pre>
+</li>
+<li>Place these imports into your main activity:<pre><code>import com.amazonaws.mobileconnectors.lex.interactionkit.Response;
+import com.amazonaws.mobileconnectors.lex.interactionkit.config.InteractionConfig;
+import com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView;
+</code></pre>
+</li>
+<li>Add the following code to your activity_main.xml layout to add the voice component:<pre><code>&lt;com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
+android:id=&#34;@+id/voiceInterface&#34;
+layout=&#34;@layout/voice_component&#34;
+android:layout_width=&#34;200dp&#34;
+android:layout_height=&#34;200dp&#34;/&gt;
+</code></pre>
+</li>
+<li>Add this line of code in your strings.xml file to set the region for your bot:<pre><code>&lt;string name=&#34;aws_region&#34;&gt;us-east-1&lt;/string&gt;
+</code></pre>
+</li>
+<li>Add an init() function in your main activity and a call to this new init() function in onCreate(). Be sure to read the comments and replace fields with your bot&#39;s name and your bot&#39;s alias that you defined earlier!<pre><code>public void init(){
+        InteractiveVoiceView voiceView =
+                (InteractiveVoiceView) findViewById(R.id.voiceInterface);
+    
+        voiceView.setInteractiveVoiceListener(
+                new InteractiveVoiceView.InteractiveVoiceListener() {
+    
+                    @Override
+                    public void dialogReadyForFulfillment(Map slots, String intent) {
+                Log.d(&#34;INTENT&#34;,intent);
+                        Log.d(&#34;READY&#34;, String.format(
+                                Locale.US,
+                                &#34;Dialog ready for fulfillment:\n\tIntent: %s\n\tSlots: %s&#34;,
+                                intent,
+                                slots.toString()));
+                    }
+    
+                    @Override
+                    public void onResponse(Response response) {
+                        Log.d(&#34;RESPONSE&#34;, &#34;Bot response: &#34; + response.getTextResponse());
+                    }
+    
+                    @Override
+                    public void onError(String responseText, Exception e) {
+                        Log.e(&#34;ERROR&#34;, &#34;Error: &#34; + responseText, e);
+                    }
+                });
+    
+        voiceView.getViewAdapter().setCredentialProvider(AWSMobileClient.getInstance().getCredentialsProvider());
+    
+        //replace parameters with your botname, bot-alias
+        voiceView.getViewAdapter()
+                .setInteractionConfig(
+                        new InteractionConfig(&#34;YOUR-BOT-NAME&#34;,&#34;$LATEST&#34;));
+    
+        voiceView.getViewAdapter()
+                .setAwsRegion(getApplicationContext()
+                        .getString(R.string.aws_region));
+    }
+</code></pre>
+</li>
+<li>Your bot is now fully integrated with your application. Now you&#39;re going to want to recieve output from the bot when you speak to it. To do this, create a TextView in your layout xml file and add the following line after &#34;Log.d(&#34;RESPONSE&#34;, &#34;Bot response: &#34; + response.getTextResponse());&#34; in your MainActivity.java<pre><code>TextView mResponseView = findViewById(R.id.responseView);
+mResponseView.setText( response.getTextResponse() );
+</code></pre>
+</li>
+<li>Now that your bot is fully set up with your project, you&#39;re going to want to edit the responses that your bot will give to certain prompts. To do this, navigate back to your Lex Project in the AWS mobile hub. In the second row of icons, click the purple &#34;Converstaional Bots&#34; button. Then click &#34;edit&#34; on the bot you&#39;d like to edit.</li>
+<li>In the new page that you&#39;re directed to, go ahead and edit the different fields and responses to custom tailor your bot.</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary" duration="0">
+        <p><em>Now you have a working conversation bot integrated with your Android Studio Project</em><br>Please follow this <a href="https://aws.amazon.com/lex/" target="_blank">link</a> for more information on Amazon Lex. The link can provide different functionalities to leverage with this technology.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Designing with React Native - by Team 1032</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Designing with React Native - by Team 1032"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Step 0: Pre-Setup check" duration="0">
+        <p>Before we can start with react-native, we have to make sure we have Node.js.<br>If you don&#39;t have Node.js installed, install it from <a href="https://nodejs.org/en/" target="_blank">here</a>.<br>If you do have Node.js installed, ensure that it is at least version 8.3.<br>You can use the command <code>node --version</code> to check.<br>If it is not at least v8.3 you can upgrade using the same installer found at the above link.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1: Getting Started" duration="0">
+        <p>We are going to start by setting up the react native CLI. More info can be found  <a href="https://facebook.github.io/react-native/docs/getting-started" target="_blank">here</a></p>
+<p>Basically what we need to do is:</p>
+<ol type="1">
+<li>Run this command in command prompt: <code>npm install -g react-native-cli</code></li>
+<li>Ensure you have android studio and android sdk</li>
+<li>Set up ANDROID_HOME variable to be the path to the sdk folder (likely in <code>&lt;USER&gt;\Appdata\Local\android\</code>)</li>
+<li>Initialize your application project folder by running this command in command prompt: <code>react-native init &lt;PROJECT_NAME&gt;</code></li>
+<li>In command prompt, switch to the project folder (<code>cd &lt;PROJECT_NAME&gt;</code>), then run the server with <code>react-native start</code></li>
+</ol>
+<p>To open the project in Android Studio, you can open the <code>&lt;PROJECT_NAME&gt;/android</code> folder as the android studio project.</p>
+<p>Now that we have a project, you should add the some pictures (and the assets folder).<br>You can copy the folder from you project 1, if you still have it.<br>There should also be an example assets folder included with this codelab.</p>
+<p>To run the app, we must first run an AVD, either using adb through terminal/command line, or through Android Studio. We can then build the app, again either using a CLI or Android Studio.</p>
+<p>This should push the app to your AVD.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2: Editting the App.js" duration="0">
+        <p>The app.js contains everything that is sent to the client-side (the app) so all the coding is done in here.<br>After editing app.js, you can reload your app by pressing <code>r</code> twice in the AVD.<br>The <code>render()</code> function returns what you want the app to display, it will start pre-generated with a basic view and some text pieces.</p>
+<h2>Button</h2>
+<p>We can remove the text elements replace them with a button that will control the image switching.<br>To make the button show up just above the bottom we create a view with a style for it:</p>
+<pre><code>style={{
+    flex:1,
+    flexDirection: &#39;column&#39;,
+    justifyContent: &#39;flex-end&#39;,
+    alignItems:&#39;center&#39;,
+    marginBottom: 16,
+   }}
+</code></pre>
+<p>Here we are passing the button element a prop named &#34;style&#34;, which the button will automatically parse as indicatiors for how it should look. (The styling is similar to CSS styling).<br>This will ensure it is centered horizontally.</p>
+<p>This button will also need a title (ex. &#34;Change Picture&#34;) and a onPress function (ex. onPressEvent).<br>These should also be passed in as props.</p>
+<pre><code>title={&#39;Change Picture&#39;},
+onPress={this.onPressEvent},
+</code></pre>
+<p>Now above the render function but still inside the App class define onPressEvent:</p>
+<pre><code>onPressEvent = () =&gt; {
+    // Pick random next pic
+    // Set the picture
+}
+</code></pre>
+<p>We will fill out this function later.</p>
+<h2>Image</h2>
+<p>Now we also want to add a place for the Image to go.<br>We will create a <code>&lt;Image... /&gt;</code> element and pass it these props for styling:</p>
+<pre><code>style={{
+    flex: 1,
+    alignSelf: &#39;stretch&#39;,
+    width: undefined,
+    height: undefined,
+   }}
+resizeMode=&#34;contain&#34;
+</code></pre>
+<p>This allows the image to change its shape to fit the screen width.<br>The <code>resizeMode</code> stops it from exceeding the size of the screen (its container).</p>
+<h2>State</h2>
+<p>For that data that is going to change, we need to use the <code>state</code>.<br>State should hold all dynamic variables.<br>Everything else in the component (the class we are working in), should be purly functional.<br>State is usually initilized in the constructor (which we will create) and then updated with <code>this.setState()</code>.<br>Lastly, state is stored as a simple JSON object.</p>
+<p>The image will need a source to display. We will have to use the <code>require()</code> function to load an image from a file.<br>We don&#39;t want to always load the same image though so we have to save a few things to the state.</p>
+<p>In the state we will store all the images we have (with the <code>require()</code> function) to avoid conflicts with passing it a non-constant string.<br>We will also store the index of the picture it is currently on.</p>
+<pre><code>constructor(props) {
+    super(props);
+    this.state = {
+        images: [
+            require(&#34;./android/app/src/main/assets/kitten_pictures/kittenPic1.jpg&#34;),
+            require(&#34;./android/app/src/main/assets/kitten_pictures/kittenPic2.jpg&#34;),
+            require(&#34;./android/app/src/main/assets/kitten_pictures/kittenPic3.jpg&#34;),
+            require(&#34;./android/app/src/main/assets/kitten_pictures/kittenPic4.jpg&#34;),
+            require(&#34;./android/app/src/main/assets/kitten_pictures/kittenPic5.jpg&#34;),
+        ],
+        curPic: 0,
+    };
+}
+</code></pre>
+<p>Be sure to have correct paths and filenames to your files.</p>
+<p>Now that we have a state we need to tell the image to get its source from the state using <code>source={this.state.images[this.state.curPic]}</code></p>
+<h2>Button Functionality</h2>
+<p>Now that the image is all set we can fill in the functionality for the button we stubbed out.</p>
+<p>We will simply get the next picture in the list on each button press.<br>To get the next picture, we can get the current index, add 1, and mod by the length of the list, pretty simple.<br>However, to get the image that is displayed to update, we need to change the value of <code>curPic</code> in the state.<br>To update the value in state, we have to use <code>setState(...)</code>, passing it a JSON with entries for what entries in state we want to update.</p>
+<pre><code>this.setState({
+    curPic: this.state.curPic = (this.state.curPic + 1) % this.state.images.length,
+});
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary" duration="0">
+        <p>We have now (hopefully) created a functioning react app.<br>If you are interested in learning how to make this app more complicated than a single component (class), you can learn more <a href="https://reactjs.org/docs/components-and-props.html#composing-components" target="_blank">here</a>.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

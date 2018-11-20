@@ -1,0 +1,22 @@
+{
+  "environment": "web",
+  "source": "Team1050TopicSurvey.md",
+  "format": "html",
+  "prefix": "../../",
+  "mainga": "UA-49880327-14",
+  "updated": "2018-11-20T06:57:39-05:00",
+  "id": "ts1050",
+  "duration": 0,
+  "title": "CS4518 Topic Survey - Intro to Encryption in Android - by Team 1050",
+  "summary": "CS4518 Topic Survey - Intro to Encryption in Android",
+  "theme": "",
+  "status": null,
+  "category": [
+    "cryptography",
+    "encryption",
+    "decryption",
+    "sms"
+  ],
+  "tags": [],
+  "url": "ts1050"
+}

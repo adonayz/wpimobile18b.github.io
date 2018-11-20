@@ -1,0 +1,178 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Topic Survey - Intro to Encryption in Android - by Team 1050</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Topic Survey - Intro to Encryption in Android - by Team 1050"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>In this tutorial, we will show you the basics of encryption and decryption of messages using the Advanced Encryption Standard (AES) algorithm.</p>
+<p>Prerequisites:<br>AVD with API 27 or higher and support environment manipulation<br>SMS_Encrypt Starter Code (provided by us)</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Open Starter Code" duration="0">
+        <p>Before we begin, you will need the following starter code for the application named SMS_Encrypt. You can download it here: https://drive.google.com/file/d/1z0O71QV0Y98bYuvV9B-pZRwSJSYP04uU/view?usp=sharing</p>
+<p>In this starter code, we have already set up the functionality to send SMS to other devices. The starter code&#39;s UI consists of two editable text fields that allow you to type in messages and the number of the emulator you want to send a message to, a button to send the message in the message field, and two buttons for encryption and decryption which currently do not do anything. It also contains a text field where users can enter a key used to encrypt and decrypt messages.</p>
+<p><img alt="Image of UI" src="img/6ea8b20d3d7b5f2.PNG"></p>
+<p>Let&#39;s test the starter code by running the application on 2 devices at the same time, which we will show you on the next step.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setup Testing Environment" duration="0">
+        <p>First, open AVD Manager. We assume you already have one virtual device set up. Create another one with similar settings to the first, using the <code>Create Virtual Device...</code> button in the lower left of the AVD manager. <strong>DO NOT DUPLICATE</strong> your existing device, as it may not allow you to open both of those virtual devices at the same time.</p>
+<p><img alt="2 virtual devices in AVD Manager" src="img/664004e96e555f3b.PNG"></p>
+<p>Next, we will run the application on both devices, and test sending a message from one to the other.</p>
+<p>The device number can be seen when you choose the devices to open. (You can also find this number by going to <code>...</code> on the emulator&#39;s side menu, then <code>Help -&gt; About</code> and finding the number under the serial number field.)  By default, the numbers are 5554 and 5556. Test the application by entering the recipient device number and a message to be sent. Press Send once you are done. You should see the message being received, unencrypted, on the other device:</p>
+<p><img alt="One device receiving the message from another" src="img/f6e6bb475814a68a.PNG"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Encryption" duration="0">
+        <h2>Preparation</h2>
+<p>First, make a function that the Encrypt button would call upon being clicked. Give it a helpful name such as <code>encrypt</code>.</p>
+<p>When the user clicks the button, we want to encrypt the message they have written. Get the text contained in the message field (its id in the view is <code>messageText</code>), and the key string from its field (its id in the view is ‘keyText&#39;). The encryption we are using requires keys to be exactly 16 characters long, so make sure to check for this when you get the key value!</p>
+<p>Feel free to extend the function by dealing with different circumstances, e.g. text field is empty. You can use Toast to inform the user that a certain text field should be filled, or you can simply allow an empty string to be encrypted.</p>
+<h2>Cipher</h2>
+<p>Now that we have the information from the UI, the next step is to get a <code>Cipher</code> object. To do this, we call <code>Cipher.getInstance</code> and store the result in a Cipher variable.</p>
+<p>The version of <code>getInstance</code> we use has a single parameter, <code>String transformation</code>, which indicates what type of encryption we want to perform. Since we are performing AES, pass in <code>&#34;AES&#34;</code>.</p>
+<pre><code>Cipher cipher = Cipher.getInstance(&#34;AES&#34;);
+</code></pre>
+<p><strong>Note:</strong> If you are curious about the different types of encryption available to use, they are listed here: https://developer.android.com/reference/javax/crypto/Cipher</p>
+<p>Next, we need to create our key, using the string we stored for it. Create an object of type <code>SecretKey</code>, and initialize it with <code>new SecretKeySpec</code>, passing in the bytes of the text from the key UI field and our algorithm, <code>&#34;AES&#34;</code>.</p>
+<p>Now we need to initialize our Cipher object so that it is ready to perform encryption. To do this, we call the <code>init</code> function.</p>
+<p>This method has two parameters: <code>int opmode</code> and <code>Key key</code>. The first one is what we will use to tell the object to encrypt the string, rather than decrypt it. We pass the <code>Cipher.ENCRYPT_MODE</code> constant into this field. For the key, provide the SecretKey you just created.</p>
+<pre><code>SecretKey key = new SecretKeySpec(keyString.getBytes(), &#34;AES&#34;);
+cipher.init(Cipher.ENCRYPT_MODE, key);
+</code></pre>
+<p>Now our Cipher object is all set to start encrypting, and we can perform the actual encryption. This can be done using our Cipher&#39;s <code>doFinal</code> method.</p>
+<pre><code>byte[] output = cipher.doFinal(message.getBytes());
+</code></pre>
+<p>We will pass in a single parameter, the string of our message text we retrieved earlier, also calling <code>.getBytes()</code> on it to get it into the proper <code>byte[]</code> parameter type. <code>doFinal</code> returns a byte array of the output, so we should store that in a variable.</p>
+<p>We are all done encrypting! However, since we want to send this over SMS, we have one additional step to make. When sending over SMS, the message is sent as a String. However, turning the byte array into a String, and then attempting to turn it back into a byte array to decrypt, can cause problems.</p>
+<p>We will need to implement two functions, <code>byte2hex</code> and <code>hex2byte</code>, which will convert the already encrypted bytes into hex values and vice versa. These hex values are stored as a string, making it possible for us to send and receive the string, then return it to its proper byte array when decrypting. The code for these functions are shown below:</p>
+<pre><code>private static String byte2hex(byte[] b) {
+        String hs = &#34;&#34;;
+        String stmp = &#34;&#34;;
+        for (int n = 0; n &lt; b.length; n++) {
+            stmp = Integer.toHexString(b[n] &amp; 0xFF);
+            if (stmp.length() == 1)
+                hs += (&#34;0&#34; + stmp);
+            else
+                hs += stmp;
+        }
+        return hs.toUpperCase();
+}
+private static byte[] hex2byte(byte[] b) {
+        if ((b.length % 2) != 0)
+            throw new IllegalArgumentException(&#34;hello&#34;);
+        byte[] b2 = new byte[b.length / 2];
+        for (int n = 0; n &lt; b.length; n += 2) {
+            String item = new String(b, n, 2);
+            b2[n / 2] = (byte) Integer.parseInt(item, 16);
+        }
+        return b2;
+}
+</code></pre>
+<p>Call <code>byte2hex</code> and pass in the results of our encryption, then use <code>setText()</code> on the EditText field for the message to update the message text with the encrypted, hex-ified version of it. We can now send encrypted messages!</p>
+<p><img alt="2 devices, one sends encrypted message to other" src="img/d592f1a173f41d40.PNG"></p>
+<p><strong>Note</strong>: There are many ways to implement the functions <code>getInstance</code>, <code>init</code>, and <code>doFinal</code>, i.e. different numbers and types of parameters to use. Check it out on https://developer.android.com/reference/javax/crypto/Cipher if you are interested to learn more to apply to various situations.</p>
+<p><strong>Note</strong>: We use the helper functions <code>hex2byte</code> and <code>byte2hex</code> for our application, which turns byte arrays into a readable form. If we were not storing the encrypted fields in strings, this would not be necessary.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Decryption" duration="0">
+        <p>Decrypting is going to be very similar to encrypting. First, we want a method that is called when we click the &#34;Decrypt&#34; button, with a helpful name such as <code>decrypt</code>. However, unlike the encrypt method, we are going to be accessing the text field with the view id <code>receivedMessage</code>, since we want to decrypt the messages that have been sent to us.</p>
+<p>The code is very similar to the <code>encrypt</code> function we created in the last step. We get our Cipher object instance in the same way, as well as the key, and we also call the <code>init</code> method, with one important difference: we want to pass in <code>Cipher.DECRYPT_MODE</code> so it will decrypt our text rather than encrypt it!</p>
+<pre><code>cipher.init(Cipher.DECRYPT_MODE, key);
+</code></pre>
+<p>Remember when we used <code>byte2hex</code> to convert the byte array to a string-friendly format? Now that we need to access the message as a byte array again, we need to call <code>hex2byte</code> to return the received to its original format before we decrypt it.</p>
+<p>We also call the <code>doFinal</code> method again, passing in our received message as a byte array and storing the output in a new byte array variable.</p>
+<pre><code>byte[] bytes = hex2byte(message.getBytes());
+byte[] decr = cipher.doFinal(bytes);
+</code></pre>
+<p>We can then update the <code>receivedMessage</code> text field to show our decrypted message.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Result" duration="0">
+        <p>As discussed in the previous sections, our application can perform simple SMS functionality, in particular sending and receiving SMS message between devices. We can test our results by sending the encrypted message from one device to another. On the receiving device, make sure to enter the same key that we use for encryption to decrypt the message. We should obtain the original message as a result.</p>
+<p><img alt="2 devices, showing one receives and decrypts message successfully" src="img/baeed4d5af49fa2e.PNG"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary" duration="0">
+        <p>In this tutorial, we have accomplished several goals, in particular:<br>Make use of SMS functionality<br>Encryption of outgoing message<br>Decryption of incoming message</p>
+<p>There are many ways you can make use of encryption and decryption knowledge in Android development. We hope our basic walkthrough can give you a fundamental understanding of how it works so you can apply the skills on your own application in the future!</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="References" duration="0">
+        <p>We used these resources when learning how to perform encryption as well as how to send SMS messages for creating our tutorial:</p>
+<ul>
+<li>https://sites.google.com/site/mobilesecuritylabware/3-data-location-privacy/lab-activity/cryptography/cryptography-mobile-labs/encryption-decryption/2-lab-activity/lab-1-encryption-decryption-on-sms-android-studio</li>
+<li>https://mobiforge.com/design-development/sms-messaging-android</li>
+<li>https://developer.android.com/reference/javax/crypto/Cipher</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

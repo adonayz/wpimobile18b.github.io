@@ -1,0 +1,264 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Topic Sruvey: Room Persistence - by Team 1021</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Topic Sruvey: Room Persistence - by Team 1021"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>This tutorial will show you how to</p>
+<ul>
+<li>Fetch data with DAOs</li>
+<li>Define entity relationships</li>
+<li>Observe LiveData frmo a ViewModel</li>
+<li>Use custom Type Converters</li>
+<li>Add custom query result objects</li>
+</ul>
+<p>Prerequisites:</p>
+<ul>
+<li>Android Studio installed</li>
+<li>AVD with API 23 or higher</li>
+<li>Starter code downloaded</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Set up environment" duration="0">
+        <p>In this step, you download the code for the entire codelab.</p>
+<p><a href="https://github.com/frcampanelli/RoomPersistenceTutorial" target="_blank">source code</a></p>
+<ul>
+<li>Unzip the code, and then open the project using Android Studio.  Then, build the app to make sure there are no errors or missing dependencies.<br></li>
+<li>Build the app by creating the Step1 run configuration shown here:</li>
+</ul>
+<p><img alt="Step1 configuration" src="img/9b83666835cfef88.PNG"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Intruducing Room" duration="0">
+        <p><em>Adapted from the </em><a href="https://developer.android.com/topic/libraries/architecture/room" target="_blank"><em>Room Persistence Library</em></a><em> page:</em></p>
+<p>If your app handles non-trivial amounts of data, you can gain a number of benefits by storing at least some of that data locally using Room. The most common benefit is to optimize network connectivity, by caching relevant data to ensure users can still browse that content while they are offline. Any changes the user makes to content can later be synced to the server, once the device is back online.</p>
+<p>The core Android framework provides built-in support for working with raw SQL data. While the built-in APIs are very powerful, they also present a number of development challenges:</p>
+<ul>
+<li>They are relatively low-level, and require a large amount of development time and effort.</li>
+<li>Raw SQL queries are not verified at compile-time.</li>
+<li>You must manually update SQL queries to reflect changes in your data graph. This process is unnecessarily time consuming, and error-prone.</li>
+<li>You write and maintain a lot of boilerplate code to convert between SQL queries and data objects.</li>
+</ul>
+<p>Room is designed to abstract away the underlying database tables and queries, and encourage best-practice development patterns on Android.</p>
+<p>By default, Room doesn&#39;t allow you to issue database queries on the main thread to avoid poor UI performance. However querying on the main thread is enabled in this tutorial for simplicity.</p>
+<p>Take some time to look over the <code>airportDB</code> package to learnabout the data entities, namely the</p>
+<ul>
+<li><code>Flight</code> data class</li>
+<li><code>Passenger</code> data class</li>
+<li><code>Ticket</code> data class</li>
+</ul>
+<p>Notice that the <code>@Entity</code> annotation to mark a data class as a persistable entity. At least one of the class fields must be annotated with the <code>@PrimaryKey</code> annotation.</p>
+<p>The data classes hold information from the internal database for Java to use.<br><br>In order to get Java objects with relevent data, we use DAO interfaces.</p>
+<ul>
+<li><code>FlightDao</code></li>
+<li><code>PassengerDao</code></li>
+<li><code>TicketDao</code></li>
+</ul>
+<p>The <code>@Dao</code> annotation is used to create data access objects, which define SQLite queries. You explore data access objects in more detail later in this tutorial.<br><br>Finally, review the AppDatabase class, which is annotated using <code>@Database</code>.<br><br>This pulls all the Dao interfaces together, and defines a version number for the database.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Entities" duration="0">
+        <p>Look at <code>Flight</code>. Notice its <code>@Entity</code> annotation is blank. This is becuase the <code>Flight</code> entity is just a simple data object to store data.<br><br>Also notice how the <code>id</code> field is annotated with <code>@PrimaryKey</code> and <code>@NonNull</code>. These are the same as the <code>PRIMARY KEY</code> and <code>NON NULL</code> constraints in SQLite.<br><br>Now look at <code>Ticket</code>. Its <code>@Entity</code> annotation is a little different:</p>
+<pre><code>@Entity(foreignKeys = {
+        @ForeignKey(entity = Flight.class,
+                parentColumns = &#34;id&#34;,
+                childColumns = &#34;flight_id&#34;),
+
+        @ForeignKey(entity = Passenger.class,
+                parentColumns = &#34;id&#34;,
+                childColumns = &#34;passenger_id&#34;)})
+</code></pre>
+<p>This entity has <code>@ForgienKey</code> annotations, to link the <code>FORGIEN KEY</code> constraints that should exist in the SQL.<br><br>Notice how these forgien keys are reflected in the variables:</p>
+<pre><code>@ColumnInfo(name=&#34;flight_id&#34;)
+public String flightId;
+
+@ColumnInfo(name=&#34;passenger_id&#34;)
+public String passengerId;
+</code></pre>
+<p>The <code>@ColumnInfo</code> annotation tells Room exactly how the columns should be named in the internal database, so it matches the forgien key declarations.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1 - Create DAOs" duration="0">
+        <p>A Data Access Object (DAO) is an abstract class or interface that includes methods to define database queries. The annotated methods in this class are used to generate the corresponding SQL at compile time.<br><br>These queries are annoted with <code>@Query</code> and contain the actual SQL queries that run when the method is called.</p>
+<pre><code>@Query(&#34;SELECT * FROM Flight WHERE destination = :destination&#34;)
+List&lt;Flight&gt; findAllFlightsByDestinationSolution(String destination);
+</code></pre>
+<p>There are also abstracted <code>@Insert</code> and <code>@Update</code> queries, which will ignore and replaceexisting records as indicated:</p>
+<pre><code>@Insert(onConflict = IGNORE)
+void insertFlight(Flight Flight);
+
+@Update(onConflict = REPLACE)
+void updateFlight(Flight Flight);
+</code></pre>
+<p>Next, open the step1 package and review the UsersActivity class, which fetches data from the database using the following code:</p>
+<pre><code>private void fetchData() {
+    // Note: this kind of logic should not be in an activity.
+    StringBuilder sb = new StringBuilder();
+    List&lt;Flight&gt; flights = mDb.flightModel().findAllFlightsByDestination(&#34;New York&#34;);
+    for (Flight flight : flights) {
+        sb.append(String.format(Locale.US,
+                &#34;Flight id: %s, origin: %s, destination: %s\n&#34;, flight.id, flight.origin, flight.destination));
+    }
+    mFlightsTextView.setText(sb);
+}
+</code></pre>
+<p>Caution: For simplicity, this activity has a reference to the database but in a real app the database would belong in a different component. We fix this later in the tutorial.</p>
+<p>Create a run configuration for <code>UserActivity</code> in the <code>step1</code> package and run it. Notice how all flights are listed.<br><img alt="Part1" src="img/76abf0d920ffe700.png"></p>
+<p>We want to create a query to only shot flights to New York.<br><br>Open <code>FlightDao</code> and create a new <code>@Query</code> to only select flights that have a destination of &#34;New York&#34;</p>
+<pre><code>@Query(&#34;SELECT * FROM Flight WHERE destination = :destination&#34;)
+List&lt;Flight&gt; findAllFlightsByDestination(String destination);
+</code></pre>
+<p>Next, call the new method from the activity, to only get flights that are going to New York:</p>
+<pre><code>List&lt;Flight&gt; flights = mDb.flightModel().findAllFlightsByDestination(&#34;New York&#34;);
+</code></pre>
+<p>Run the app again and you should see that only flights from New York are listed:<br><img alt="Part1 solution" src="img/8446a0684a654e3.png"></p>
+<p>Caution: The operation added in this step runs on the main thread. However input and output operations must be executed in the background. At this stage, you are probably not noticing any performance problems because the queries are simple and the database is stored in memory, rather than on disk. Also, placing all this logic in the activity is not considered best practice. We fix these problems in future steps.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2 - Entity Relationships" duration="0">
+        <p>Recall the <code>Ticket</code> class and how it had <code>@ForgienKey</code> relations set up.<br><br>In this step we will show how these can be used with queries to get data across entities.<br><br>Review the following annotated query from <code>PassengerDao</code>:</p>
+<pre><code>@Query(&#34;SELECT Passenger.id, Passenger.name, Passenger.lastName, Passenger.age FROM Passenger &#34; +
+    &#34;JOIN Ticket ON Ticket.passenger_id = Passenger.id &#34; +
+    &#34;JOIN Flight ON Ticket.flight_id = Flight.id &#34; +
+    &#34;WHERE Flight.destination LIKE :destination&#34;
+)
+List&lt;Passenger&gt; findPassengersFlyingToDestSync(String destination);
+</code></pre>
+<p>Create a run configuration for <code>step2</code> and run the app to see passengers that are flying to New York:<br><img alt="Part2" src="img/c3bef1127d697960.png"></p>
+<p>You may notice a small performance problem when opening the app; the UI is blocked while the database is being populated.<br><br>This operation is purposely slow, to simulate a worst-case scenario.</p>
+<p>The database is popualting on the main UI thread. To change this remove the following code in <code>BadShowUserActivity</code>:</p>
+<pre><code>DatabaseInitializer.populateSync(mDb);
+</code></pre>
+<p>Replace the code you removed with the following statement, to switch to using an asynchronous task to populate the data:</p>
+<pre><code>DatabaseInitializer.populateAsync(mDb);
+</code></pre>
+<p>Run the app again, and notice that the list has no entries until you click the refresh button. This is becuase of a race condition. The databse is being populated in the background while the UI is being drawn.<br><br>The query results arrive before <code>Ticket</code> is populated. Waiting a few seconds and then pressing <strong>Refresh</strong> will update the list to show the proper information.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3 - Create ViewModel and LiveData" duration="0">
+        <p>In this step, you add LiveData, a lifecycle-aware component which can be observed, typically described as an observable.<br><br>Simply wrapping your @Query return type with LiveData provides you with database observers for minimal extra effort.<br><br>You also move the reference to the database, from the activity, to a ViewModel.</p>
+<p>Explore the <code>step3</code> package. <code>PassengersFlyingToDestActivity</code> implements a <code>PassengersFlyingToDestViewModel</code>. This allows the app to automatically update the list of passengers as the database populates.<br><br>Complete the <code>subscribeUiPassengers</code> method as follows to attach to the ViewModel:</p>
+<pre><code>private void subscribeUiPassengers() {
+    mViewModel.passengers.observe(this, new Observer&lt;List&lt;Passenger&gt;&gt;() {
+        @Override
+        public void onChanged(@NonNull final List&lt;Passenger&gt; passengers) {
+            showPassengersInUi(passengers);
+        }
+    });
+}
+</code></pre>
+<p>Create and run the <code>step3</code> run configuration and notice how the list smoothly updates without needing to <strong>Refresh</strong><img alt="Part 3" src="img/59bd31f0a128ac92.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4 - Create Custom Type Converters" duration="0">
+        <p>Since SQLite only supports a few datatypes, sometimes certian Java objects will need to be represented differently in the database.<br><br>This is solved with <code>@TypeConverters</code>.<br><br>Open up <code>DateConverter</code> in the <code>airportDB</code> package and see how each method is annotated with <code>@TypeConverter</code>:</p>
+<pre><code>public class DateConverter {
+    @TypeConverter
+    public static Date toDate(Long timestamp) {
+        return timestamp == null ? null : new Date(timestamp);
+    }
+
+    @TypeConverter
+    public static Long toTimestamp(Date date) {
+        return date == null ? null : date.getTime();
+    }
+}
+</code></pre>
+<p>The <code>java.util.Date</code> object will automatically be converted to a <code>Long</code>. This is useful when creating a query that accepts a Date:</p>
+<pre><code>@Query(&#34;SELECT * FROM Flight WHERE landingTime &gt; :landingTime&#34;)
+LiveData&lt;List&lt;Flight&gt;&gt; findAllFlightsByLandingTime(Date landingTime);
+</code></pre>
+<p>This query is called in the ViewModel:</p>
+<pre><code>mFlights = mDb.flightModel().findAllFlightsByLandingTime(tomorrow);
+</code></pre>
+<p>Create and run the <code>step4</code> configuration and see that only flights that land tomorrow are shown:<br><img alt="Part4" src="img/c8ede603963abe18.png"></p>
+<p>You can view the source code for the <code>DatabaseInitializer</code> class for additional details on what initial data is being inserted and how initialization is implemented.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 5 - Custom Query Result Objects" duration="0">
+        <p>Custom query result objects let us hold and possibly display more information than what regular query result objects can. For example, we want to show the flights of a specific passenger, in this case Mike, that land anytime tomorrow and beyond.</p>
+<p><img alt="Part5" src="img/6c369cdb08d728b8.png"></p>
+<p>To do this we use a query that gets data from both Flights and Passenger.</p>
+<pre><code>@Query(&#34;SELECT * &#34; +
+        &#34;FROM Flight &#34; +
+        &#34;INNER JOIN Ticket ON Ticket.flight_id = Flight.id &#34; +
+        &#34;INNER JOIN Passenger on Passenger.id = Ticket.passenger_id &#34; +
+        &#34;WHERE Passenger.name LIKE :firstName &#34; +
+        &#34;AND Flight.landingTime &gt; :landingTime &#34;)
+LiveData&lt;List&lt;TicketWithPassengerAndFlight&gt;&gt; findTicketsByPassengerAndLandingTime(String firstName, Date landingTime);
+</code></pre>
+<p>This returns a query result object that we define in the <code>TicketWithPassengerAndFlight</code> class. The fields returned from the query must match the fields in the class. This is verified at compile time, and raises a warning if there is a mismatch.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>
