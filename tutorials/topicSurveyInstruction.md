@@ -13,7 +13,7 @@
 - 1051 Amazon Lex: 1
 - 1039 ACRcore: 1
 - 1050 Encryption: 1
-- 1031 Material Design: 0
+- 1031 Material Design: 1
 - 1055 Firebase: 1
 - 1021 Room persistence: 1
 - 1009 RecyclerView view: 1
