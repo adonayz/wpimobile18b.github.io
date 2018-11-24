@@ -1,0 +1,229 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Integrating User Table That Stores User Preferences Like Language – By Ryan Racine</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="Integrating User Table That Stores User Preferences Like Language – By Ryan Racine"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Step 1: Editing Layout" duration="0">
+        <p>We will need to create a new toggle button to switch the launguage choice.<br>This text view will go in the top right of the screen</p>
+<pre><code>    &lt;ToggleButton
+        android:id=&#34;@+id/langSwitch&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginTop=&#34;8dp&#34;
+        android:layout_marginEnd=&#34;8dp&#34;
+        android:onClick=&#34;onLangSwitch&#34;
+        android:text=&#34;Language&#34;
+        android:textOff=&#34;English&#34;
+        android:textOn=&#34;Spanish&#34;
+        app:layout_constraintEnd_toEndOf=&#34;parent&#34;
+        app:layout_constraintTop_toTopOf=&#34;parent&#34; /&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2: Adding a User Table" duration="0">
+        <p>We already have the Database, its helper and the first table contract from the previous tutorial but now we will want to add another table to this database.<br>We will start by adding a new java class for the user table&#39;s contract. This tables will have two columns, one to store the username and the other to<br>store the user&#39;s laungauge preference:</p>
+<pre><code>public class UserContract {
+    private UserContract(){}
+
+    public static class UserEntry implements BaseColumns {
+        public static final String TABLE_NAME = &#34;users&#34;;
+
+        public static final String COLUMN_NAME_USER = &#34;user&#34;;
+        public static final String COLUMN_NAME_LANGUAGE = &#34;language&#34;;
+    }
+}
+</code></pre>
+<p>Now that we&#39;ve made the table&#39;s contract we need to add it to the helper. Start by adding the SQL for creating and deleting the table into the helper class:</p>
+<pre><code>    private static final String SQL_CREATE_USER =
+            &#34;CREATE TABLE &#34; + UserContract.UserEntry.TABLE_NAME + &#34; (&#34; +
+                    UserContract.UserEntry._ID +  &#34; INTEGER PRIMARY KEY,&#34; +
+                    UserContract.UserEntry.COLUMN_NAME_USER + &#34; TEXT,&#34; +
+                    UserContract.UserEntry.COLUMN_NAME_LANGUAGE + &#34; TEXT)&#34;;
+
+    private static final String SQL_DELETE_USERS =
+            &#34;DROP TABLE IF EXISTS &#34; + UserContract.UserEntry.TABLE_NAME;
+</code></pre>
+<p>To get the helper to actually run these we must add them to the onCreate and onUpgrade functions:</p>
+<pre><code>    public void onCreate(SQLiteDatabase db) {
+        ...
+        db.execSQL(SQL_CREATE_USER);
+    }
+
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
+        ...
+        db.execSQL(SQL_DELETE_USERS);
+        ...
+    }
+</code></pre>
+<p>(Don&#39;t forget that youll have to delete the app to reset the database and have it recreate itself)</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3: Editting the Main Activity" duration="0">
+        <p>Now that we have all the database helper stuff set up, we can integrate it into the app itself.</p>
+<p>First lets get the language switch toggle all set. For this we will declare a variable for the <code>ToggleButton</code> at the top of the class (<code>private ToggleButton mLangSwitch;</code>).<br>We can get the button from the layout inside the <code>onCreate()</code> with (<code>mLangSwitch = (ToggleButton) findViewById(R.id.langSwitch);</code>). The last big thing we have to do for the ToggleButton<br>is to add a onSwitch function (you&#39;ll notice we already linked it to the ToggleButton in the view above). This function will first get the current language from the database, then<br>determine what the next language should be and set the language to be that:</p>
+<pre><code>    public void onLangSwitch(View v) {
+        String oldLang = getCurLang();
+        String curLang = (oldLang.equals(&#34;English&#34;)) ? &#34;Spanish&#34; : &#34;English&#34;;
+        setCurLang(curLang);
+    }
+</code></pre>
+<p>Youll notice we use two functions her we have not yet defined (<code>getCurLang()</code> and <code>setCurLang()</code>), we will define these to functions next.</p>
+<p><code>getCurLang()</code> will be in charge of querying the database to find the current user&#39;s preferred language and returning it.<br>First it will need to get a readable database from the helper. Then it will query the Users table in this database and pull out all entries with the same username as the current user.<br>Then it will try to pull out the language from the one entry it found. If it didn&#39;t find any users with that username or anything else went wrong, it will return a failure.</p>
+<pre><code>    public String getCurLang(){
+        // Access database
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        Cursor lang = db.query(UserContract.UserEntry.TABLE_NAME, null,UserContract.UserEntry.COLUMN_NAME_USER +&#34;=&#39;&#34; + user + &#34;&#39;&#34;, null, null, null, null);
+        try{
+            lang.moveToFirst();
+            String s=lang.getString(lang.getColumnIndex(UserContract.UserEntry.COLUMN_NAME_LANGUAGE));
+            return s;
+        }
+        catch(Exception e){
+            // Failed so return failure
+            return &#34;Fail&#34;;
+        }
+    }
+</code></pre>
+<p>Now that getting the current users language preference is all set we need to be also able to set this user&#39;s preference. We will do this with the <code>setCurLang()</code> function.<br>There are four main parts to this function. First we have to access the database. Then we have to create the entry we want to insert or update the database with.<br>Then we have to insert or update the database, depending on if the user is already in the database or not. Lastly we should update the view so all the default tet is in the preferred language.</p>
+<pre><code>    public void setCurLang(String lang){
+        // Access Database
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+	// Create contentValues
+        ContentValues mContentValues = new ContentValues();
+        mContentValues.put(UserContract.UserEntry.COLUMN_NAME_USER, user);
+        mContentValues.put(UserContract.UserEntry.COLUMN_NAME_LANGUAGE, lang);
+     	
+	// If not already in the database, insert instead of update
+	long numEntries = DatabaseUtils.queryNumEntries(db, UserContract.UserEntry.TABLE_NAME);
+        if (numEntries == 0) {
+            sqlDb.insert(UserContract.UserEntry.TABLE_NAME, null, mContentValues);
+        }
+        else {
+            // If already exists
+            sqlDb.update(UserContract.UserEntry.TABLE_NAME,  mContentValues, UserContract.UserEntry.COLUMN_NAME_USER +&#34;=&#39;&#34; + user + &#34;&#39;&#34;, null);
+        }
+
+        // Update view
+        if (lang.equals(&#34;English&#34;)){
+            if(mSubmitButton.getText().toString().equals(DefButtonTxtSpn) || mSubmitButton.getText().toString().equals(&#34;?&#34;))
+                mSubmitButton.setText(DefButtonTxtEng);
+            if(mEditText.getText().toString().equals(DefTextViewTxtSpn) || mEditText.getText().toString().equals(&#34;?&#34;))
+                mEditText.setText(DefTextViewTxtEng);
+        }
+        else{
+            if(mSubmitButton.getText().toString().equals(DefButtonTxtEng) || mSubmitButton.getText().toString().equals(&#34;?&#34;))
+                mSubmitButton.setText(DefButtonTxtSpn);
+            if(mEditText.getText().toString().equals(DefTextViewTxtEng) || mEditText.getText().toString().equals(&#34;?&#34;))
+                mEditText.setText(DefTextViewTxtSpn);
+        }
+    }
+</code></pre>
+<p>A coupe things you&#39;ll notice about this code is that we haven&#39;t set the default user&#39;s username, we havent defined variables<br>for Default textview and button in either launguage, and we also never set these elements to display &#34;?&#34;.</p>
+<p>So first lets add these variables to the beginning of our <code>MainActivity</code> class:</p>
+<pre><code>public class MainActivity extends AppCompatActivity {
+    ...
+    String user = &#34;USER1&#34;;
+    String DefButtonTxtEng = &#34;SUBMIT&#34;;
+    String DefButtonTxtSpn = &#34;ENVIAR&#34;;
+    String DefTextViewTxtEng = &#34;Enter Text Here.&#34;;
+    String DefTextViewTxtSpn = &#34;Introducir Texto Aqu�.&#34;;
+    ...
+}
+</code></pre>
+<p>The next thing we are going to want to square away is setting the text for the TextView and the Submit Button at the beginning.<br>We dont want them to show either language until it knows which language the user uses so in the <code>onCreate()</code> function we will set them both to show &#34;?&#34;<br>(this is what that check above is used for):</p>
+<pre><code>    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        ...
+        mEditText.setText(&#34;?&#34;);
+        mSubmitButton.setText(&#34;?&#34;);
+        ...
+    }
+</code></pre>
+<p>To prevent the user from seeing our confusion we want to update this text after the database is initialized. So in the <code>onCreate()</code> after the<br>database is initialized we should set the current language to be what is stored in the database (keep in mind set current language takes care of all the View<br>updates for us). First we will check that it has a stored language. If it does, great we can just set it to be the same launguage (and update the toggle button).<br>If it doesn&#39;t then we will start the user out by setting their language to English.</p>
+<pre><code>    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        ...
+        String langStatus = getCurLang();
+        if(langStatus.equals(&#34;Fail&#34;))
+            setCurLang(&#34;English&#34;);
+        else {
+            setCurLang(langStatus);
+            if(langStatus.equals(&#34;Spanish&#34;))
+                mLangSwitch.setChecked(true);
+        }
+        ...
+    }
+</code></pre>
+<p>The last thing we want to do is reset the text in the TextView to default of whichever laungage is being used inside <code>onSubmitButtonPressed()</code>:</p>
+<pre><code>    public void onSubmitButtonPressed(View v){
+        ...
+        String langStatus = getCurLang();
+        if(langStatus.equals(&#34;Spanish&#34;))
+            mEditText.setText(DefTextViewTxtSpn);
+        else
+            mEditText.setText(DefTextViewTxtEng);
+        ...
+    }
+</code></pre>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

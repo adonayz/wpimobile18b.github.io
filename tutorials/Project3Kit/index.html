@@ -1,0 +1,425 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Tutorial: Redesigning SQLite 3 for Custom Storage and List View Display –  By Karitta Zellerbach</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Tutorial: Redesigning SQLite 3 for Custom Storage and List View Display –  By Karitta Zellerbach"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>This tutorial will show you how to redesign SQLite3 to store your images, timestamps, locations acquired in Project 2. You will also learn how to display this data in a custom List View.</p>
+<p>Prerequisites:</p>
+<ul>
+<li>Android Studio 3.2</li>
+<li>Android physical or virtual devices API 27</li>
+<li>Even More Curiosity!</li>
+<li>My Project 2 OpenWeatherMap Tutorial (or any data you want to store)</li>
+<li><a href="https://wpimobile18b.github.io/tutorials/Database/#0" target="_blank">Database Codelab Tutorial</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Merge Files" duration="0">
+        <p>With your Project 2 open in Android Studio, make sure you add the LogEntryDbHelper and LogContract class from the database codelab into your project.</p>
+<p>All you should need to do to finish merging the two projects is add a global variable <code>LogEntryDbHelper mDbHelper;</code> to your MainActivity class and then add <code>mDbHelper = new LogEntryDbHelper(this);</code> to your onCreate() call.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Update the LogContract" duration="0">
+        <p>Now we&#39;re going to need to update your LogContract class to store the data you want to store. Since I&#39;m storing weather data, my class looks like this:</p>
+<pre><code>public class LogContract {
+
+    private LogContract() {
+    }
+
+    public static class LogEntry implements BaseColumns {
+        public static final String TABLE_NAME = &#34;logEntries&#34;;
+        public static final String COLUMN_NAME_LOCATION = &#34;location&#34;;
+        public static final String COLUMN_NAME_DESC = &#34;description&#34;;
+        public static final String COLUMN_NAME_TEMP = &#34;temperature&#34;;
+        public static final String COLUMN_NAME_HUMIDITY = &#34;humidity&#34;;
+        public static final String COLUMN_NAME_PRESSURE = &#34;pressure&#34;;
+        public static final String COLUMN_NAME_TIME = &#34;time&#34;;
+        public static final String COLUMN_NAME_FILEPATH = &#34;filepath&#34;;
+
+
+        public static final String SQL_CREATE_ENTRIES =
+                &#34;CREATE TABLE &#34; + LogEntry.TABLE_NAME + &#34; (&#34; +
+                        LogEntry._ID + &#34; INTEGER PRIMARY KEY,&#34; +
+                        LogEntry.COLUMN_NAME_LOCATION + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_DESC + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_TEMP + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_HUMIDITY + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_PRESSURE + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_TIME + &#34; TEXT,&#34; +
+                        LogEntry.COLUMN_NAME_FILEPATH + &#34; TEXT)&#34;;
+
+        public static final String SQL_DELETE_ENTRIES =
+                &#34;DROP TABLE IF EXISTS &#34; + LogEntry.TABLE_NAME;
+    }
+}
+</code></pre>
+<p>Now lets add another button to the layout to save the photo and it&#39;s data into the database.</p>
+<p><img alt="Buttons" src="img/4fe18b8a98c0af60.png"></p>
+<p>I&#39;ve attached this button to the onSubmit() function below:</p>
+<pre><code>    public void onSubmit(View v) {
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(LogContract.LogEntry.COLUMN_NAME_DESC, String.valueOf(mDesc.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_HUMIDITY, String.valueOf(mHum.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_LOCATION, String.valueOf(mLoc.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_PRESSURE, String.valueOf(mPres.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_TEMP, String.valueOf(mTemp.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_TIME, String.valueOf(mTime.getText()));
+        values.put(LogContract.LogEntry.COLUMN_NAME_FILEPATH, mCurrentPhotoPath);
+
+        long newRowId = db.insert(LogContract.LogEntry.TABLE_NAME, null, values);
+
+        Snackbar.make(v, &#34;Pet Submitted!&#34;, Snackbar.LENGTH_LONG)
+                .setAction(&#34;Action&#34;, null).show();
+    }
+</code></pre>
+<p>Because I store the my data in various text fields, I use <code>String.valueOf(mDesc.getText())</code>. However, if you only use internal variables you can just refer to them instead.</p>
+<p>I also decided to add a Snackbar so the user know&#39;s when the image has been saved. You can choose to do this, or perhaps clear the textfields instead.</p>
+<p>Now when you open your app, take a photo, then press the save button, the data should be saved in your database. While this is good, it&#39;s pretty limited. Let&#39;s do something with our data.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Displaying Database Data" duration="0">
+        <p>Now we need a way to display our data. I decided to create a Custom ListView that is displayed in a Dialog Window which is called by pressing a Floating Action Button.</p>
+<p>To start, let&#39;s add a Floating Action Button to the top layer of our layout. You can add it wherever you like! I put mine on the top left with a star icon.</p>
+<p><img alt="FAB" src="img/9ac5bfb4d50b889f.png"></p>
+<p>After you give it an id and assign it to a variable in your code using <code>findViewById()</code>, we want to assign it a <code>onClickListener()</code> in the <code>onCreate()</code> call in our MainActivity class. We&#39;ll leave this empty for now.</p>
+<pre><code>fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+				...
+            }
+        });
+</code></pre>
+<p>Now it&#39;s time to create the layout for our dialog window.</p>
+<p>I create a dialog xml layout file called <code>custom_dialog.xml</code>. In this layout, I have declared a ListView and a Button to close the dialog, as can be seen below:</p>
+<pre><code>&lt;LinearLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    android:orientation=&#34;vertical&#34;&gt;
+    &lt;Button
+        android:id=&#34;@+id/btn_exit&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;30dp&#34;
+        android:background=&#34;@android:color/white&#34;
+        android:clickable=&#34;true&#34;
+        android:text=&#34;Exit&#34;
+        android:textColor=&#34;#5DBCD2&#34;
+        android:textStyle=&#34;bold&#34; /&gt;    
+    &lt;ListView
+        android:id=&#34;@+id/List&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34; &gt;
+    &lt;/ListView&gt;
+&lt;/LinearLayout&gt;
+</code></pre>
+<p>In order to display the data from our database into a ListView, it would great if we had a model to represent out data.</p>
+<p>Let&#39;s create a custom Log class to act as the model for each row of our database. The variables in your class should match the columns in your table.</p>
+<pre><code>public class Log {
+    private String location;
+    private String description;
+    private String humidity;
+    private String temperature;
+    private String pressure;
+    private String filepath;
+    private String time;
+}    
+</code></pre>
+<p>Using Command + N, you can select to generate the Constructor and all the Getters and Setters.</p>
+<p><img alt="Generate" src="img/489c9323f589668a.png"></p>
+<p>Now we need to create a custom layout XML file that defines the structure for each individual item (or group of weather data) in our ListView. If you didn&#39;t know, a ListView is a ViewGroup that displays a list of vertically scrollable items.</p>
+<p>For each item/row in the database, I display an ImageView and a series of TextViews for the weather data. Make sure you the id names are representative of the data you will put in them, as we will need to reference them soon.</p>
+<p>Here&#39;s what mine looks like - it&#39;s called <code>row_layout.xml</code></p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;&gt;
+
+    &lt;ImageView
+        android:id=&#34;@+id/text_path&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;200dp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_loc&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_path&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_desc&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_loc&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_temp&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_desc&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_hum&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_temp&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_pres&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_hum&#34;/&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/text_time&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;temp&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_pres&#34;/&gt;
+        
+    &lt;TextView
+        android:id=&#34;@+id/text_fill&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:text=&#34;--------------&#34;
+        android:textColor=&#34;#000&#34;
+        android:textSize=&#34;25sp&#34;
+        android:gravity=&#34;center&#34;
+        app:layout_constraintTop_toBottomOf=&#34;@id/text_time&#34;/&gt;
+&lt;/android.support.constraint.ConstraintLayout&gt;
+</code></pre>
+<p>It should look something like this in the Design window. But remember, it won&#39;t look exactly like this in the app, as we will be displaying it in a dialog window.</p>
+<p><img alt="Layout" src="img/d46f1c8a85b642b5.png"></p>
+<p>Now we need to make a custom Adapter class that extends the BaseAdapter class. This will allow us to populate the ListView with our custom data!</p>
+<p>In the ListView, the list items are automatically inserted into the list using an adapter that is connected to a source, such as an array or a database query.</p>
+<p>To implement BaseAdapter, we must override following methods:</p>
+<ul>
+<li>int getCount()</li>
+<li>Object getItem(int position)</li>
+<li>long getItemId(int position)</li>
+<li>View getView(int position, View convertView, ViewGroup parent)</li>
+</ul>
+<pre><code>public class CustomAdapter extends BaseAdapter {
+
+    private ArrayList&lt;Log&gt; petList;
+    private Context context;
+
+    public CustomAdapter(ArrayList&lt;Log&gt; list, Context cont) {
+        this.petList = list;
+        this.context = cont;
+    }
+
+    @Override
+    public int getCount() {
+        return this.petList.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return this.petList.get(position);
+    }
+
+    @Override
+    public long getItemId(int i) {
+        return i;
+    }
+
+    private static class ViewHolder {
+        private TextView location;
+        private TextView description;
+        private TextView humidity;
+        private TextView temperature;
+        private TextView pressure;
+        private ImageView filepath;
+        private TextView time;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder = null;
+
+        if (convertView == null) {
+            LayoutInflater inf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inf.inflate(R.layout.row_layout, null);
+
+            holder = new ViewHolder();
+            holder.location = (TextView) convertView.findViewById(R.id.text_loc);
+            holder.description = (TextView) convertView.findViewById(R.id.text_desc);
+            holder.humidity = (TextView) convertView.findViewById(R.id.text_hum);
+            holder.temperature = (TextView) convertView.findViewById(R.id.text_temp);
+            holder.pressure = (TextView) convertView.findViewById(R.id.text_pres);
+            holder.filepath = (ImageView) convertView.findViewById(R.id.text_path);
+            holder.time = (TextView) convertView.findViewById(R.id.text_time);
+
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
+
+        holder.location = (TextView) convertView.findViewById(R.id.text_loc);
+        holder.description = (TextView) convertView.findViewById(R.id.text_desc);
+        holder.humidity = (TextView) convertView.findViewById(R.id.text_hum);
+        holder.temperature = (TextView) convertView.findViewById(R.id.text_temp);
+        holder.pressure = (TextView) convertView.findViewById(R.id.text_pres);
+        holder.filepath = (ImageView) convertView.findViewById(R.id.text_path);
+        holder.time = (TextView) convertView.findViewById(R.id.text_time);
+
+        Log pet = petList.get(position);
+        holder.location.setText(pet.getLocation());
+        holder.description.setText(pet.getDescription());
+        holder.humidity.setText(pet.getHumidity());
+        holder.temperature.setText(pet.getTemperature());
+        holder.pressure.setText(pet.getPressure());
+        Bitmap bitmap = BitmapFactory.decodeFile(pet.getFilepath());
+        holder.filepath.setImageBitmap(bitmap);
+        holder.time.setText(pet.getTime());
+
+        return convertView;
+    }
+}
+</code></pre>
+<p>As you can see, this class makes use of our Log class, as well as our <code>row_layout.xml</code> file. This happens specifically in the line <code>convertView = inf.inflate(R.layout.row_layout, null);</code>. If your layout isn&#39;t called <code>row_layout</code>, make sure you update it to <code>R.layout.[your_layout_name]</code>.</p>
+<p>The <code>getView()</code> method is the most important, as it sets the indivudal text views and image view that we declared in our <code>row_layout.xml</code> file. We have to inflate our <code>row_layout.xml</code> file then match the view&#39;s in the holder object to the view id&#39;s we declared in the xml file. After that we can set the text the the values in the Log object from the specified position integer. We will never call <code>getView()</code>, this will all happen automatically, which is why it is important that we implement the overridden BaseAdapter methods correctly.</p>
+<p>Back in the LogEntryDbHelper class we need to add a function to return a list of all our entries. Since we want all entries, our query will be <code>&#34;select * from &#34; + LogContract.LogEntry.TABLE_NAME</code>.</p>
+<pre><code>public ArrayList&lt;Log&gt; getAllData() {
+        ArrayList&lt;Log&gt; petList = new ArrayList&lt;&gt;();
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery(&#34;select * from &#34; + LogContract.LogEntry.TABLE_NAME, null);
+
+        while (res.moveToNext()) {
+            String a = res.getString(1);
+            String b = res.getString(2);
+            String c = res.getString(3);
+            String d = res.getString(4);
+            String e = res.getString(5);
+            String g = res.getString(6);
+            String f = res.getString(7);
+            Log newPet = new Log(a, b, d, c, e, f, g);
+            petList.add(newPet);
+        }
+        return petList;
+    }
+</code></pre>
+<p>Make sure you know which column is what, as the <code>res.getString(index)</code> returns the data in the column specified by the index value. Index 0 is most likely your primary id value, so we can skip that unless you want to display the entry number!</p>
+<p>Now we can finally populate our <code>onClick()</code> listener for our Floating Action Button. Pay attention to the line <code>ListView lv = (ListView) dialog.findViewById(R.id.List);</code>. In my <code>custom_dialog.xml</code> file I gave my ListView the id of List, so make sure you update this line to match the name of your ListView.</p>
+<pre><code>    @Override
+    public void onClick(View view) {
+        final Dialog dialog = new Dialog(MainActivity.this);
+        dialog.setContentView(R.layout.custom_dialog);
+        ListView lv = (ListView) dialog.findViewById(R.id.List);
+
+        ArrayList&lt;Log&gt; petList = mDbHelper.getAllData();
+
+        CustomAdapter petAdapter = new CustomAdapter(petList, MainActivity.this);
+        lv.setAdapter(petAdapter);
+
+        dialog.setCancelable(true);
+        dialog.setTitle(&#34;ListView&#34;);
+        
+        Button dialogButton = (Button) dialog.findViewById(R.id.btn_exit);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+                   dialog.dismiss();
+              }
+          });
+        
+        dialog.show();
+
+    }
+</code></pre>
+<p>Now when we take picture, add it to the database using our submit button, then click on the Floating Action Button, we should see a list of all our data entries!</p>
+<p><img alt="FAB" src="img/c9226d063e31189d.png"></p>
+<p>Looks pretty solid to me. Feel free to improve this by adding a search bar for custom queries, rather than displaying all the rows. Also the ListView is pretty boring. It might be worth improving the UI or experimenting with fragments!</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary and Resources" duration="0">
+        <p>In this tutorial we built on the Database codelab tutorial as well as our data aqusition from Project 2 to save images and data to a SQLite database and display all the results in a List View that appears in a custom dialog window.</p>
+<p>To learn more about List Views, please visit this <a href="https://guides.codepath.com/android/Using-a-BaseAdapter-with-ListView" target="_blank">page</a>.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

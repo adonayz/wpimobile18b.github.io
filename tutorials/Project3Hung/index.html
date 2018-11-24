@@ -1,0 +1,350 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Project 3 Using Firebase Database/Storage Tutorial - by Hung Hong</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Project 3 Using Firebase Database/Storage Tutorial - by Hung Hong"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview of Tutorial" duration="0">
+        <p>This tutorial will show you how to integrate Firebase into your application for database and storage of information.</p>
+<p>Prerequisites:</p>
+<ul>
+<li>Understand the concept from Project 3 - Part 1</li>
+<li>Have Firebase account ready</li>
+<li>AVD with API 27 or higher and support environment manipulation</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Integrate Firebase Library" duration="0">
+        <p>Assuming you have already made a Firebase account and follow its instruction on how to link Firebase to your application (<strong>Hint:</strong> it has something to do with google-services.json), your next step will be adding the necessary libraries before we start making the application.</p>
+<p>Change the view to Project and find <strong>build.gradle</strong>, add the following line under <strong>dependencies</strong>:</p>
+<pre><code>classpath &#39;com.google.gms:google-services:4.0.1&#39;
+</code></pre>
+<p>Now go to <strong>app &gt; src</strong> and find <strong>build.gradle</strong>, add these following lines under **dependencies:</p>
+<pre><code>// Firebase
+implementation &#39;com.google.firebase:firebase-firestore:17.1.3&#39;
+implementation &#39;com.google.firebase:firebase-storage:16.0.5&#39;
+implementation &#39;com.google.firebase:firebase-core:16.0.5&#39;
+implementation &#39;com.google.firebase:firebase-auth:16.0.5&#39;
+</code></pre>
+<p>At the end of the file, add the following line:</p>
+<pre><code>apply plugin: &#39;com.google.gms.google-services&#39;
+</code></pre>
+<p>Select <strong>Sync Now</strong> and your project should be connected to Firebase already.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Add the 3rd-Party Sensor Library to Dependencies" duration="0">
+        <p>Like I mentioned before, we will be using a 3rd-party Library called <strong>Sensey</strong> for Part 2 as a neat way to obtain Sensor data.<br>This library is available to be used and accessed easily. All you have to do is to add the following line to the list of dependencies:</p>
+<pre><code>implementation &#39;com.github.nisrulz:sensey:1.8.0&#39;
+</code></pre>
+<p>There will be a prompt for you to sync up your build.gradle, so just select <strong>Sync Now</strong> and you are good to go.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Implement the UI" duration="0">
+        <p>The next thing we want to do is to prepare the UI for this application, though this should not take a long time.</p>
+<p>Since we will be using image to upload to Firebase Storage later on, make sure you have ImageView to display the image. Additionally, create several PlainText for data you want to input to the Firebase Database.</p>
+<p>Below is my design UI for the application:</p>
+<p><img alt="Proposed UI" src="img/35d6b63ec3c2dbcf.PNG"></p>
+<p>You should be all set for the next step, which we will actually start doing some codings</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Making a Class" duration="0">
+        <p>We will be making a class before editing <strong>MainActivity.java</strong>. Since the application is designed for sharing pet&#39;s information, I will create a class called &#34;Pet&#34; so we can use this to upload to the database later on.</p>
+<p>Below is my implementation of <strong>Pet.java</strong>. Feel free to edit if you want to have more parameters recorded.</p>
+<pre><code>public class Pet {
+    private String name;
+    private int age;
+    private String species;
+    private String image;
+
+    public Pet() {}
+    public Pet(String name, int age, String species, String image) {
+        this.name = name;
+        this.age = age;
+        this.species = species;
+        this.image = image;
+    }
+
+    public String getName() { return name; }
+
+    public void setName(String name) { this.name = name; }
+
+    public int getAge() { return age; }
+
+    public void setAge(int age) { this.age = age; }
+
+    public String getSpecies() { return species; }
+
+    public void setSpecies(String species) { this.species = species; }
+
+    public String getImage() { return image; }
+
+    public void setImage(String image) { this.image = image; }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Preparing data for Firebase" duration="0">
+        <p>We should be ready to work on <strong>MainActivity.java</strong> right now. Firstly, we should initialize Firebase so we can use Cloud service for our application.</p>
+<p>Under <strong>onCreate</strong> function, add these following lines:</p>
+<pre><code>// Initialize Firestore and the RecyclerView
+initFirestore();
+initStorage();
+
+// Get a reference to the pet collection
+listPet = mFirestore.collection(&#34;pets&#34;);
+</code></pre>
+<p>Then we define these following functions:</p>
+<pre><code>// Initialize Firestore
+private void initFirestore() {
+    mFirestore = FirebaseFirestore.getInstance();
+}
+
+// Initialize Storage
+private void initStorage() {
+    storage = FirebaseStorage.getInstance();
+    storageReference = storage.getReference();
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Preparing Image to be uploaded" duration="0">
+        <p>We will have 2 options for users to upload image: image taken from Camera, or image existing in the external storage.</p>
+<p>For image in Camera, feel free to refer to the Camera Tutorial that we have already done in the past. Here is the code snippets for what I did for Camera button:</p>
+<pre><code>// Button for camera
+public void onClickCameraButton(View v) {
+    Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    if (pictureIntent.resolveActivity(getPackageManager()) != null){
+        // Create a file to store the image
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+            // Error occurred while creating the File
+            return;
+        }
+        if (photoFile != null) {
+            photoURI = FileProvider.getUriForFile(this, &#34;wpi.hphong.petshare.fileprovider&#34;, photoFile);
+            pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            startActivityForResult(pictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+}
+
+private File createImageFile() throws IOException {
+    String timeStamp = new SimpleDateFormat(&#34;yyyyMMdd_HHmmss&#34;, Locale.getDefault()).format(new Date());
+    String imageFileName = &#34;IMG_&#34; + timeStamp + &#34;_&#34;;
+    File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    File image = File.createTempFile(
+            imageFileName,  /* prefix */
+            &#34;.jpg&#34;,         /* suffix */
+            storageDir      /* directory */
+    );
+    mCurrentPhotoPath = image.getAbsolutePath();
+    mCurrentPhotoName = image.getName();
+    return image;
+}
+</code></pre>
+<p>For image from existing file in the external storage, we will be using Intent, as shown in class and in the textbook.</p>
+<pre><code>// Button for select image from system
+public void onClickChooseButton (View v) {
+    Intent intent = new Intent();
+    intent.setType(&#34;image/*&#34;);
+    intent.setAction(Intent.ACTION_GET_CONTENT);
+    startActivityForResult(Intent.createChooser(intent, &#34;Select Picture&#34;), REQUEST_IMAGE_SELECT);
+}
+</code></pre>
+<p>Lastly, we make sure that the image is displayed to our ImageView. This should not be new:</p>
+<pre><code>@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    ImageView cameraImg = (ImageView) findViewById(R.id.imageView);
+    if (requestCode == REQUEST_IMAGE_CAPTURE &amp;&amp; resultCode == RESULT_OK) {
+        cameraImg.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
+    }
+    if (requestCode == REQUEST_IMAGE_SELECT &amp;&amp; resultCode == RESULT_OK) {
+        photoURI = data.getData();
+        mCurrentPhotoName = getFileName(photoURI);
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), photoURI);
+            cameraImg.setImageBitmap(bitmap);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+<p>Take note that here I use a helper function called <strong>getFileName</strong> to obtain the file name from the URI. This is helpful as I will be making use of the name as part of the information uploaded to the database. Credit to StackOverflow community for this neat function.</p>
+<pre><code>// Helper function to get file name from URI
+public String getFileName(Uri uri) {
+    String result = null;
+    if (uri.getScheme().equals(&#34;content&#34;)) {
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        try {
+            if (cursor != null &amp;&amp; cursor.moveToFirst()) {
+                result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            }
+        } finally {
+            cursor.close();
+        }
+    }
+    if (result == null) {
+        result = uri.getPath();
+        int cut = result.lastIndexOf(&#39;/&#39;);
+        if (cut != -1) {
+            result = result.substring(cut + 1);
+        }
+    }
+    return result;
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="One Button to Upload All" duration="0">
+        <p>One remaining thing is to post the information to Firebase database and storage. Information such as name/age/species will go to the Database, while image resource will go to the Storage. You can always check them on Firebase consoles.</p>
+<p>Make a new function to be assigned to the <strong>Add</strong> button, let&#39;s call it <strong>onClickAdd()</strong>.</p>
+<p>We will need to upload the information to the database. Since we already got a reference to our database collection, we will simply use <strong>add()</strong> to push to the database.</p>
+<pre><code>// Add pet information to database
+TextView name = (TextView) findViewById(R.id.nameText);
+TextView age = (TextView) findViewById(R.id.ageText);
+TextView species = (TextView) findViewById(R.id.speciesText);
+Pet pet = new Pet();
+pet.setName(name.getText().toString());
+pet.setAge(Integer.parseInt(age.getText().toString()));
+pet.setSpecies(species.getText().toString());
+pet.setImage(mCurrentPhotoName);
+listPet.add(pet);
+</code></pre>
+<p>Next, we will upload the actual image resource that we either got it from external file or from camera to our Firebase Storage. Use these following lines which will call to our Storage Reference and push the image files to Storage through <strong>putFile()</strong></p>
+<pre><code>// Add pet image to storage
+if(photoURI != null)
+{
+    StorageReference ref = storageReference.child(&#34;images/&#34;+ mCurrentPhotoName);
+    ref.putFile(photoURI).addOnSuccessListener(new OnSuccessListener&lt;UploadTask.TaskSnapshot&gt;() {
+        @Override
+        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+            Toast.makeText(MainActivity.this, &#34;Uploaded&#34;, Toast.LENGTH_SHORT).show();
+        }
+    }).addOnFailureListener(new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+            Toast.makeText(MainActivity.this, &#34;Failed &#34;+e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }).addOnProgressListener(new OnProgressListener&lt;UploadTask.TaskSnapshot&gt;() {
+        @Override
+        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+            double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot.getTotalByteCount());
+            // To be used if needed to check progress
+        }
+    });
+}
+</code></pre>
+<p>And with that, you should be all set! Don&#39;t forget to add permissions to <strong>AndroidManifest.xml</strong></p>
+<pre><code>&lt;uses-permission android:name=&#34;android.permission.INTERNET&#34; /&gt;
+&lt;uses-feature android:name=&#34;android.hardware.camera&#34; android:required=&#34;true&#34; /&gt;
+&lt;uses-permission android:name=&#34;android.permission.WRITE_EXTERNAL_STORAGE&#34; /&gt;
+&lt;uses-permission android:name=&#34;android.permission.READ_EXTERNAL_STORAGE&#34; /&gt;
+</code></pre>
+<p>And make sure you add the FileProvider to the Manifest file as well (refer to Project 1)</p>
+<pre><code>&lt;provider
+    android:name=&#34;android.support.v4.content.FileProvider&#34;
+    android:authorities=&#34;wpi.hphong.petshare.fileprovider&#34;
+    android:exported=&#34;false&#34;
+    android:grantUriPermissions=&#34;true&#34;&gt;
+    &lt;meta-data
+        android:name=&#34;android.support.FILE_PROVIDER_PATHS&#34;
+        android:resource=&#34;@xml/filepaths&#34;&gt;&lt;/meta-data&gt;
+&lt;/provider&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Final Result" duration="0">
+        <p>Our final result is an app that can take in users&#39; input and image resource and push them to Firebase Cloud Service so others can view them on other devices.</p>
+<p><img alt="Final Product" src="img/c1bbed11c6aa960f.PNG"></p>
+<p>You can actually go to your Firebase project and see these information yourself. For example, my Database contains following information that I pushed during my testing:</p>
+<p><img alt="Database on Firebase" src="img/e1af3e192b2aceb0.PNG"></p>
+<p>The images are uploaded to the Storage instead, and you can also view them to confirm that your image has been published to the Cloud.</p>
+<p><img alt="Storage on Firebase" src="img/2870c5bbfea6b8c8.PNG"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Summary" duration="0">
+        <p>In this tutorial, we have accomplished several things:</p>
+<ul>
+<li>Link project to Firebase libraries</li>
+<li>Use Camera and Intent for images</li>
+<li>Publish information to Firebase Cloud Services.</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "environment": "web",
+  "source": "project3_Hung.md",
+  "format": "html",
+  "prefix": "../../",
+  "mainga": "UA-49880327-14",
+  "updated": "2018-11-24T17:53:56-05:00",
+  "id": "Project3Hung",
+  "duration": 0,
+  "title": "CS4518 Project 3 Using Firebase Database/Storage Tutorial - by Hung Hong",
+  "author": "Hung Hong",
+  "summary": "CS4518 Project 3 Using Firebase Database/Storage Tutorial",
+  "theme": "",
+  "status": null,
+  "category": [
+    "firebase",
+    "database",
+    "storage",
+    "images"
+  ],
+  "tags": [],
+  "url": "Project3Hung"
+}
