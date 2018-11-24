@@ -1,4 +1,4 @@
-﻿id:     ts1049
+﻿id: ts1049
 
 # CS4518 Team 1049 picture-in-picture tutorial
 

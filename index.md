@@ -32,8 +32,8 @@ Please refer to [here](/revisions/) for a complete list of past announcements.
 | Lecture 7 | [Data manipulation: part 1](https://ia.wpi.edu/cs4518/resources.php) | [reading 7](https://ia.wpi.edu/cs4518/resources.php) | [project 4](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 20 11:59:59PM 
 | Lecture 8 | [Data manipulation: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 8](https://ia.wpi.edu/cs4518/resources.php) |
 | Lecture 9 | Student Presentations: Topic Survey | ~~reading 9~~ | [Topic Survey in-class instruction](https://wpimobile18b.github.io/tutorials/topicSurveyInstruction.md)
-| Lecture 10 | Android Internals: part 1  | [reading 10](url) |
-| Lecture 11| Android Internals: part 2 | [reading 11](url) | 
+| Lecture 10 | Android Internals: part 1  | [reading 10](https://ia.wpi.edu/cs4518/resources.php) |
+| Lecture 11| Android Internals: part 2 | [reading 11](https://ia.wpi.edu/cs4518/resources.php) | 
 | Lecture 12 | Mobile-specific optimization: part 1    | [reading 12](url) |
 | Lecture 13 | Mobile-specific optimization: part 2 | [reading 13](url) |
-| Lecture 14 | Wrap up | [reading 14](url) | 
+| Lecture 14 | Wrap up | ~~reading 14~~ | 
