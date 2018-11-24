@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <meta name="theme-color" content="#4F7DC9">
   <meta charset="UTF-8">
-  <title>Topic Survey - Group 1055 - Firebase Authentication and Realtime Database</title>
+  <title>Firebase Authentication and Realtime Database - By Team 1055</title>
   <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="../../elements/codelab.html">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
@@ -20,7 +20,7 @@
 </head>
 <body unresolved class="fullbleed">
 
-  <google-codelab title="Topic Survey - Group 1055 - Firebase Authentication and Realtime Database"
+  <google-codelab title="Firebase Authentication and Realtime Database - By Team 1055"
                   environment="web"
                   feedback-link="">
     
@@ -49,8 +49,12 @@ implementation &#39;com.google.firebase:firebase-auth:16.0.5&#39;
 <pre><code>apply plugin: &#39;com.google.gms.google-services&#39;
 </code></pre>
 <p>This covers the dependencies for authentication and database!</p>
-<p>Firebase Authentication</p>
-<p>First, we need to enable authentication in our Firebase Console. In the firebase console, click on the Authentication tab on the left. Click on the Sign-In Method tab. In the Sign-in providers list, enable Email/Password.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Firebase Authentication" duration="0">
+        <p>First, we need to enable authentication in our Firebase Console. In the firebase console, click on the Authentication tab on the left. Click on the Sign-In Method tab. In the Sign-in providers list, enable Email/Password.</p>
 <p><img alt="Enable Email/Password Auth" src="img/51b8fc21f32698c3.png"></p>
 
 
@@ -110,21 +114,24 @@ if(currentUser != null) {
 <p>Finally, we need to allow the user to sign out. Go to the MainActivity.java file, and find the onClickSignOutButton() function. Add the following:</p>
 <pre><code>FirebaseAuth.getInstance().signOut();
 </code></pre>
-<p>Test your code</p>
-<p>Build your code and run the app. In the main page of the app, click the &#34;Sign Up&#34; button. Fill in an email, password, and favorite color for a user and click the &#34;Sign Up&#34; button again. This should register a new user. Then, go back to the Firebase Console. Under the Users tab, your new user should appear in the list!</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Troubleshooting" duration="0">
-        <p>If your app is staying on the sign up screen and no error message is showing up, check android studio for this error.</p>
-<pre><code>If you have this error, your app may have lost connection to your Firebase project. Try uninstalling the app and turning off the AVD. Then run your app again and it should reconnect. 
+      <google-codelab-step label="Test your code" duration="0">
+        <p>Build your code and run the app. In the main page of the app, click the &#34;Sign Up&#34; button. Fill in an email, password, and favorite color for a user and click the &#34;Sign Up&#34; button again. This should register a new user. Then, go back to the Firebase Console. Under the Users tab, your new user should appear in the list!</p>
+<h2>Troubleshooting</h2>
+<p>If your app is staying on the sign up screen and no error message is showing up, check android studio for this error.</p>
+<pre><code>firebaseinstanceid token retrieval failed service not available
+</code></pre>
+<p>If you have this error, your app may have lost connection to your Firebase project. Try uninstalling the app and turning off the AVD. Then run your app again and it should reconnect.</p>
 
-# Firebase Realtime Database
-## Set up database writing
-In FirebaseWrapper.java, navigate to the getUserRef() function. Delete any existing code within the function, and add the following:
-```java
-FirebaseUser currentUser = mAuth.getCurrentUser();
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Firebase Realtime Database - Writing to the Database" duration="0">
+        <p>In FirebaseWrapper.java, navigate to the getUserRef() function. Delete any existing code within the function, and add the following:</p>
+<pre><code>FirebaseUser currentUser = mAuth.getCurrentUser();
 String currentUserID = currentUser.getUid();
 String path = currentUserID + &#39;/&#39; + key;
 
@@ -164,7 +171,7 @@ ref.setValue(val);
 
       </google-codelab-step>
     
-      <google-codelab-step label="Reading and updating the database" duration="0">
+      <google-codelab-step label="Reading and Updating the Database" duration="0">
         <p>In MainActivity.java,  get an instance of FirebaseWrapper, and initialize it in the onCreate() function.</p>
 <p>In the same file, go to the watchUserKey() function. Add the following code:</p>
 <pre><code>DatabaseReference ref = firebaseWrapper.getUserRef(key);
@@ -187,15 +194,23 @@ ref.addValueEventListener(new ValueEventListener() {
 <pre><code>firebaseWrapper.writeToUser(colorField, color);
 </code></pre>
 <p>Here, we update the user&#39;s favorite color in the database based on their input string.</p>
-<p>Testing the Database</p>
-<p>Go to the Firebase console. On the left-hand side menu, click Database. Scroll down and under Realtime Database, click the Create database button. Select test mode, and click enable. This will open up a page displaying data. For now, it is empty. IMPORTANT: Do not close this page because it will delete your database since it&#39;s empty.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Testing the Database" duration="0">
+        <p>Go to the Firebase console. On the left-hand side menu, click Database. Scroll down and under Realtime Database, click the Create database button. Select test mode, and click enable. This will open up a page displaying data. For now, it is empty. IMPORTANT: Do not close this page because it will delete your database since it&#39;s empty.</p>
 <p><img alt="Enable Database" src="img/6bc488a041a56d3d.png"></p>
 <p>Now, in Android Studio, build your project and run it. Sign out if you are still signed in, and then sign up a new user with an email, password, and favorite color. After signing up, go back to the Firebase console, and see that your user has been added!</p>
 <p>To change your user&#39;s favorite color, go back to your app and input a new color as prompted. You should see the data change right away on the app, and you can see it change in the Firebase console as well.</p>
 <p>Then, in the Firebase console, you can also click on the favoriteColor data field and change it (hit enter after changing data). You will be able to see that data change reflected in your application.</p>
 <p>You now have a functioning Firebase Realtime Database!</p>
-<p>Resources</p>
-<p>To learn more about Firebase, visit the following pages:</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Resources" duration="0">
+        <p>To learn more about Firebase, visit the following pages:</p>
 <p>https://firebase.google.com/docs/guides/</p>
 <p>https://firebase.google.com/docs/database/admin/retrieve-data</p>
 <p>https://firebase.google.com/docs/auth/android/start/</p>

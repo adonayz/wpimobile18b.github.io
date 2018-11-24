@@ -1,6 +1,6 @@
 id: ts1055
 
-# Topic Survey - Group 1055 - Firebase Authentication and Realtime Database
+# Firebase Authentication and Realtime Database - By Team 1055
 
 In this tutorial, we will be adding Firebase Authentication and Realtime Database to a simple project that takes an email and password and stores your favorite color!
 
@@ -43,7 +43,7 @@ apply plugin: 'com.google.gms.google-services'
 
 This covers the dependencies for authentication and database!
 
-# Firebase Authentication
+## Firebase Authentication
 
 First, we need to enable authentication in our Firebase Console. In the firebase console, click on the Authentication tab on the left. Click on the Sign-In Method tab. In the Sign-in providers list, enable Email/Password.
 
@@ -93,7 +93,8 @@ mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, ne
         }
     }
 });
- ```
+```
+
 This will sign the user in with the specified email and password. If the user does not exist, or the email/password is wrong, Firebase will throw an error and the user will be notified.
 
 Next, find the onStart() Activity Lifecycle Callback, and add the following:
@@ -112,18 +113,19 @@ Finally, we need to allow the user to sign out. Go to the MainActivity.java file
 FirebaseAuth.getInstance().signOut();
 ```
 
-# Test your code
+## Test your code
 Build your code and run the app. In the main page of the app, click the “Sign Up” button. Fill in an email, password, and favorite color for a user and click the “Sign Up” button again. This should register a new user. Then, go back to the Firebase Console. Under the Users tab, your new user should appear in the list!
 
-## Troubleshooting 
+### Troubleshooting 
 If your app is staying on the sign up screen and no error message is showing up, check android studio for this error.
 
-```firebaseinstanceid token retrieval failed service not available```
+```
+firebaseinstanceid token retrieval failed service not available
+```
 
 If you have this error, your app may have lost connection to your Firebase project. Try uninstalling the app and turning off the AVD. Then run your app again and it should reconnect. 
 
-# Firebase Realtime Database
-## Set up database writing
+## Firebase Realtime Database - Writing to the Database
 In FirebaseWrapper.java, navigate to the getUserRef() function. Delete any existing code within the function, and add the following:
 ```java
 FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -172,7 +174,7 @@ mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this
 ```
 This will write a new user to the realtime database when a user signs up.
 
-## Reading and updating the database
+## Reading and Updating the Database
 In MainActivity.java,  get an instance of FirebaseWrapper, and initialize it in the onCreate() function.
 
 In the same file, go to the watchUserKey() function. Add the following code:
@@ -192,16 +194,19 @@ ref.addValueEventListener(new ValueEventListener() {
     }
 });
 ```
+
 The first line specifies which data we’re looking at to see if it changes. In this case, we want to know if the color field gets changed. The rest of the code contains two override functions. The most important one is onDataChange(), which is triggered when the value attached to the specified key changes. The onDataChange() function will then update the string contained within the TextView, as displayed to the user. The onCancelled() override function will trigger when there is an error, at which point it simply displays the error message to the user.
 
 Now, go to the onClickSubmitButton() function. At the top of the if statement, add the following:
+
 ```java
 firebaseWrapper.writeToUser(colorField, color);
 ```
+
 Here, we update the user’s favorite color in the database based on their input string.
 
 
-# Testing the Database
+## Testing the Database
 Go to the Firebase console. On the left-hand side menu, click Database. Scroll down and under Realtime Database, click the Create database button. Select test mode, and click enable. This will open up a page displaying data. For now, it is empty. IMPORTANT: Do not close this page because it will delete your database since it’s empty.
 
 ![Enable Database](https://raw.githubusercontent.com/kylelrichards11/fileHosting/master/CS4518_proj3_part2_DatabaseInit.png)
@@ -214,7 +219,7 @@ Then, in the Firebase console, you can also click on the favoriteColor data fiel
 
 You now have a functioning Firebase Realtime Database!
 
-# Resources
+## Resources
 
 To learn more about Firebase, visit the following pages:
 
