@@ -15,9 +15,9 @@ layout: home
 ## Announcements
 Please refer to [here](/revisions/) for a complete list of past announcements. 
 
-- Nov 10: uploaded **lecture 6**, **readings 7**, **readings 8**, and released **project 4**. 
-- Nov 13&19: uploaded **lecture 7**, **lecture 8**, and posted **three** Project 2 Part 2 tutorials! 
-
+- Nov 24: uploaded week 6 readings, and posted Project 3 Part 2 tutorials!
+- Nov 27: posted a Project 4 part 2 tutorial! 
+- Dec 1: uploaded **lecture 10**, **lecture 11**, **readings 12**, and **readings 13**, and posted Project 4 Part 2 tutorials!
 
 ## Schedule  ##
 
@@ -32,8 +32,8 @@ Please refer to [here](/revisions/) for a complete list of past announcements.
 | Lecture 7 | [Data manipulation: part 1](https://ia.wpi.edu/cs4518/resources.php) | [reading 7](https://ia.wpi.edu/cs4518/resources.php) | [project 4](https://ia.wpi.edu/cs4518/resources.php), due Tuesday Nov. 20 11:59:59PM 
 | Lecture 8 | [Data manipulation: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 8](https://ia.wpi.edu/cs4518/resources.php) |*Project 3 Part 2 tutorials:* <br> [1. Using Firebase Database/Storage Tutorial by Hung Hong](https://wpimobile18b.github.io/tutorials/Project3Hung/#0) <br> [2. Redesigning SQLite3 for Custom Storage and List View Display by Kit Zellerbach](https://wpimobile18b.github.io/tutorials/Project3Kit/#0) <br> [3. Integrating User Table That Stores User Preferences by Ryan Racine](https://wpimobile18b.github.io/tutorials/Project3Ryan/#0) <br> [4. Storing and Querying Images by Hannah Jauris](https://wpimobile18b.github.io/tutorials/Project3Hannah/#0)
 | Lecture 9 | Student Presentations: Topic Survey | ~~reading 9~~ | [Topic Survey in-class instruction](https://wpimobile18b.github.io/tutorials/topicSurveyInstruction.md)
-| Lecture 10 | Android Internals: part 1  | [reading 10](https://ia.wpi.edu/cs4518/resources.php) |
-| Lecture 11| Android Internals: part 2 | [reading 11](https://ia.wpi.edu/cs4518/resources.php) | 
-| Lecture 12 | Mobile-specific optimization: part 1    | [reading 12](url) |
-| Lecture 13 | Mobile-specific optimization: part 2 | [reading 13](url) |
+| Lecture 10 | [Android Internals: part 1](https://ia.wpi.edu/cs4518/resources.php)  | [reading 10](https://ia.wpi.edu/cs4518/resources.php) |*Project 4 Part 2 tutorials:* <br> [Firebase and GoogleML by Alex Antaya](https://wpimobile18b.github.io/tutorials/Project4AlexA/#0)
+| Lecture 11| [Android Internals: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 11](https://ia.wpi.edu/cs4518/resources.php) | 
+| Lecture 12 | Mobile-specific optimization: part 1    | [reading 12](https://ia.wpi.edu/cs4518/resources.php) |
+| Lecture 13 | Mobile-specific optimization: part 2 | [reading 13](https://ia.wpi.edu/cs4518/resources.php) |
 | Lecture 14 | Wrap up | ~~reading 14~~ | 

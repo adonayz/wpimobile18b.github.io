@@ -16,3 +16,6 @@ permalink: /revisions/
 - Nov 7: posted **four** Project 1 Part 2 tutorials! Check them out if you want more mobile hands-on experience.  
 - Nov 10: uploaded **lecture 6**, **readings 7**, **readings 8**, and released **project 4**. 
 - Nov 13&19: uploaded **lecture 7**, **lecture 8**, and posted **three** Project 2 Part 2 tutorials! 
+- Nov 24: uploaded week 6 readings, and posted Project 3 Part 2 tutorials!
+- Nov 27: posted a Project 4 part 2 tutorial! 
+- Dec 1: uploaded **lecture 10**, **lecture 11**, **readings 12**, and **readings 13**. 

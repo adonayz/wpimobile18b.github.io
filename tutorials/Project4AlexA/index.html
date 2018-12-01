@@ -1,0 +1,1362 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>CS4518 Project 4: Firebase and Google ML- By Alex Antaya</title>
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../elements/codelab.html">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <style is="custom-style">
+    body {
+      font-family: "Roboto",sans-serif;
+      background: var(--google-codelab-background, #F8F9FA);
+    }
+  </style>
+  
+</head>
+<body unresolved class="fullbleed">
+
+  <google-codelab title="CS4518 Project 4: Firebase and Google ML- By Alex Antaya"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Highlights" duration="0">
+        <p>This application leverages many different Android and Google libraries however the main focus of this tutorial will be on Firebase, specifically Firebase Real-time Database, Firebase Storage, and Firebase UI. More information about the Firebase can be found <a href="https://firebase.google.com/products/realtime-database/" target="_blank">here</a>, while more information on Google ML can be found <a href="https://firebase.google.com/products/ml-kit/" target="_blank">here</a></p>
+<h2>Prerequisites</h2>
+<ul>
+<li>Android Studio installed</li>
+<li>Java environment setup (JDK, etc...)</li>
+<li>AVD or Physical Android device running at least API 19</li>
+<li>Knowledge of Java and Android specific libraries</li>
+<li>Familiarity with RecyclerView</li>
+<li>Familiarity with NoSQL databases</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting Up The Backend" duration="0">
+        <p>Our backend will not be too complex since much of the Database and ML work is going to be handled by the high level APIs provided to us by Google for Firebase.</p>
+<h2>Database</h2>
+<p>First we will need to create an new Android project. Once we have created the Android project, we will want to navigate to the Firebase Console which can be found <a href="https://console.firebase.google.com" target="_blank">here</a>. Once at the console, we will need to create a new Firebase project. After creating the project you will be redirected to your project&#39;s specific console where you can add Firebase to your Android project (below is a screenshot the landing page as of writing...the arrow indiates the button you need to click to stat adding Firebase to your project).</p>
+<p><img src="img/fb722c2fd3f4abce.png"></p>
+<p>This will direct you to a step-by-step process for adding Firebase to your project. Since we are using OAuth2 for authentication, you will need to include the SHA-1 parameter that is marked as optional in the provided tutorial. Steps for getting the SHA-1 code are included in the provided tutorial.<br>From here on in, we will be assuming you have successfully completed the provided tutorial and have gotten Firebase added to the project.</p>
+<h2>Dependencies</h2>
+<p>This is what your app-level Gradle build file should look like to complete this tutorial.</p>
+<pre><code>apply plugin: &#39;com.android.application&#39;
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId &#34;com.aantaya.imagewars&#34;
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName &#34;1.0&#34;
+        testInstrumentationRunner &#34;android.support.test.runner.AndroidJUnitRunner&#34;
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile(&#39;proguard-android.txt&#39;), &#39;proguard-rules.pro&#39;
+        }
+    }
+    compileOptions {
+        sourceCompatibility = &#39;1.8&#39;
+        targetCompatibility = &#39;1.8&#39;
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: &#39;libs&#39;, include: [&#39;*.jar&#39;])
+    implementation &#39;com.android.support:appcompat-v7:28.0.0&#39;
+    implementation &#39;com.android.support:design:28.0.0&#39;
+    implementation &#39;com.android.support:cardview-v7:28.0.0&#39;
+    implementation &#39;com.android.support.constraint:constraint-layout:1.1.3&#39;
+    implementation &#39;com.squareup.picasso:picasso:2.5.2&#39;
+
+    // Google
+    implementation &#39;com.google.android.gms:play-services-auth:16.0.1&#39;
+
+    testImplementation &#39;junit:junit:4.12&#39;
+    androidTestImplementation &#39;com.android.support.test:runner:1.0.2&#39;
+    androidTestImplementation &#39;com.android.support.test.espresso:espresso-core:3.0.2&#39;
+
+    //Firebase
+    implementation &#39;com.google.firebase:firebase-auth:16.0.5&#39;
+    implementation &#39;com.google.firebase:firebase-storage:16.0.3&#39;
+    implementation &#39;com.firebaseui:firebase-ui-database:4.2.1&#39;
+
+    //FusedLocationProviderClient
+    implementation &#39;com.google.android.gms:play-services-location:16.0.0&#39;
+    implementation &#39;com.google.firebase:firebase-database:16.0.5&#39;
+
+    //Google Firebase ML
+    implementation &#39;com.google.firebase:firebase-ml-vision:18.0.1&#39;
+    implementation &#39;com.google.firebase:firebase-ml-vision-image-label-model:17.0.2&#39;
+}
+
+apply plugin: &#39;com.google.gms.google-services&#39;
+</code></pre>
+<p>This is what the project-level Gradle build file should look like.</p>
+<pre><code>buildscript {
+
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath &#39;com.android.tools.build:gradle:3.2.1&#39;
+        classpath &#39;com.google.gms:google-services:4.1.0&#39;
+
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+</code></pre>
+<h2>Manifest</h2>
+<p>There is nothing too special about the manifest for this project. Your manifest will look a little bit different since you will have a different package name.</p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;manifest
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    package=&#34;com.aantaya.imagewars&#34;&gt;
+
+    &lt;!-- To auto-complete the email text field in the login form with the user&#39;s emails --&gt;
+    &lt;uses-permission android:name=&#34;android.permission.ACCESS_COARSE_LOCATION&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.ACCESS_FINE_LOCATION&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.GET_ACCOUNTS&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.READ_PROFILE&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.READ_CONTACTS&#34; /&gt;
+    &lt;uses-permission android:name=&#34;android.permission.INTERNET&#34; /&gt;
+
+    &lt;application
+        android:allowBackup=&#34;true&#34;
+        android:icon=&#34;@mipmap/logo&#34;
+        android:label=&#34;@string/app_name&#34;
+        android:roundIcon=&#34;@mipmap/logo_round&#34;
+        android:supportsRtl=&#34;true&#34;
+        android:theme=&#34;@style/AppTheme&#34;
+        tools:ignore=&#34;AllowBackup,GoogleAppIndexingWarning&#34;&gt;
+        &lt;activity
+            android:name=&#34;.SignInActivity&#34;
+            android:label=&#34;@string/app_name&#34;&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name=&#34;android.intent.action.MAIN&#34; /&gt;
+
+                &lt;category android:name=&#34;android.intent.category.LAUNCHER&#34; /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+        &lt;activity
+            android:name=&#34;.MainActivity&#34;
+            android:label=&#34;@string/title_activity_main&#34;
+            android:theme=&#34;@style/AppTheme.NoActionBar&#34;&gt;
+        &lt;/activity&gt;
+        &lt;activity android:name=&#34;.AddImageActivity&#34; /&gt;
+
+        &lt;meta-data
+            android:name=&#34;com.google.firebase.ml.vision.DEPENDENCIES&#34;
+            android:value=&#34;label&#34; /&gt;
+    &lt;/application&gt;
+&lt;/manifest&gt;
+</code></pre>
+<h2>Model</h2>
+<p>Now we are ready to start writing actual code. We will need to create a model to define the data structure we will be using for each of our images. Note, firebase requires that we have an empty constructor in our model class. Our model will contain metadata about our image and a URL string to download it from Firebase Storage.</p>
+<p>Here is what our model class will look like:</p>
+<pre><code>@IgnoreExtraProperties
+public class ImageModel {
+    private String uid;
+    private String title;
+    private String description;
+    private String imageUrl;
+    private String location;
+    private long voteCount;
+    private String lables;
+
+    public ImageModel (){}
+
+    public ImageModel (String mTitle, String mDescription, String mImageUrl, String mLocation, long mVoteCount, String mLables){
+        if(mLocation == null) mLocation = &#34;N/A&#34;;
+        this.title = mTitle;
+        this.description = mDescription;
+        this.imageUrl = mImageUrl;
+        this.location = mLocation;
+        this.voteCount = mVoteCount;
+        this.lables = mLables;
+    }
+
+    //This constructor is only used for updating the votes in Firebase
+    public ImageModel (ImageModel m, long mVoteCount){
+        if(m.getLocation() == null) m.setLocation(&#34;N/A&#34;);
+        this.title = m.getTitle();
+        this.description = m.getDescription();
+        this.imageUrl = m.getImageUrl();
+        this.location = m.getLocation();
+        this.lables = m.getLables();
+        this.voteCount = mVoteCount;
+    }
+
+    //Note: Firebase requires setters and getters for each attribute
+    //  However we will not be including them in the tutorial. These must be
+    //  included in your class. It is also good practice to generate the
+    //  toString(), hashCode(), and equals() methods.
+</code></pre>
+<h2>Sign In Activity</h2>
+<p>This will be the first activity that a user is presented when they open our application. It will require the user to login using Google. We are using the OAuth 2.0 protocol. OAuth 2.0 is the industry-standard protocol for authorization. OAuth 2.0 focuses on client developer simplicity while providing specific authorization flows for web applications, desktop applications, and mobile phones.<br>Specifically, we will be using the GoogleSignInApi.</p>
+<p>Create this class:</p>
+<pre><code>public class SignInActivity extends AppCompatActivity implements
+        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
+
+    private static final String TAG = &#34;SignInActivity&#34;;
+    private static final int RC_SIGN_IN = 9001;
+
+    private SignInButton mSignInButton;
+    private ProgressBar mProgressbar;
+
+    private GoogleApiClient mGoogleApiClient;
+
+    // Firebase instance variables
+    private FirebaseAuth mFirebaseAuth;
+
+    // Firebase instance variables
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
+
+        // Assign fields
+        mSignInButton = (SignInButton) findViewById(R.id.sign_in_button);
+        mProgressbar = findViewById(R.id.sign_in_loading);
+
+        // Set click listeners
+        mSignInButton.setOnClickListener(this);
+
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+
+        // Initialize FirebaseAuth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.sign_in_button:
+                mProgressbar.setVisibility(View.VISIBLE);
+                signIn();
+                break;
+        }
+    }
+
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (result.isSuccess()) {
+                // Google Sign-In was successful, authenticate with Firebase
+                GoogleSignInAccount account = result.getSignInAccount();
+                firebaseAuthWithGoogle(account);
+            } else {
+                // Google Sign-In failed
+                Log.e(TAG, &#34;Google Sign-In failed.&#34;);
+            }
+        }
+    }
+
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        Log.d(TAG, &#34;firebaseAuthWithGooogle:&#34; + acct.getId());
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mFirebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener&lt;AuthResult&gt;() {
+                    @Override
+                    public void onComplete(@NonNull Task&lt;AuthResult&gt; task) {
+                        Log.d(TAG, &#34;signInWithCredential:onComplete:&#34; + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, &#34;signInWithCredential&#34;, task.getException());
+                            Toast.makeText(SignInActivity.this, &#34;Authentication failed.&#34;,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                            finish();
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
+        // be available.
+        Log.d(TAG, &#34;onConnectionFailed:&#34; + connectionResult);
+        Toast.makeText(this, &#34;Google Play Services error.&#34;, Toast.LENGTH_SHORT).show();
+    }
+}
+</code></pre>
+<h2>Main Activity</h2>
+<p>Once the user logs into our application, they will land on the MainActivity. The main activity this case is quite simple. We are using Fragments inside of a tabbed PageViewer so the MainActivity is basically a container for our fragments, which is where the bulk of the logic will go. Aside from that, the other things we are doing here are defining the floating action button which will be used to add images to the database, we will also request permissions if we don&#39;t already have them, and we will also instantiate the adapter we will be using for the PageViewer.</p>
+<p>Create this class:</p>
+<pre><code>public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener{
+
+    public static final int NEW_CAT_ACTIVITY_REQUEST_CODE = 1;
+    public static final int STORAGE_PERMISSION = 2;
+    public static final int LOCATION_PERMISSION = 1;
+    public static final String ANONYMOUS = &#34;anonymous&#34;;
+    public final String TAG = &#34;MAIN_ACTIVITY&#34;;
+
+    // Firebase instance variables
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private SharedPreferences mSharedPreferences;
+    private GoogleApiClient mGoogleApiClient;
+
+    private String mUsername;
+    private String mPhotoUrl;
+
+    /**
+     * The {@link android.support.v4.view.PagerAdapter} that will provide
+     * fragments for each of the sections. We use a
+     * {@link FragmentPagerAdapter} derivative, which will keep every
+     * loaded fragment in memory. If this becomes too memory intensive, it
+     * may be best to switch to a
+     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+     */
+    private SectionsPagerAdapter mSectionsPagerAdapter;
+
+    /**
+     * The {@link ViewPager} that will host the section contents.
+     */
+    private ViewPager mViewPager;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        getPermission();
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // Create the adapter that will return a fragment for each of the three
+        // primary sections of the activity.
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+        //Set page limit to 1 so when we are scrolling through tabs, we don&#39;t destroy
+        // a page (Fragment) and need to make an expensive network call to get db contents every time
+        mViewPager.setOffscreenPageLimit(1);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(view -&gt; {
+            Intent intent = new Intent(MainActivity.this, AddImageActivity.class);
+            startActivityForResult(intent, NEW_CAT_ACTIVITY_REQUEST_CODE);
+        });
+
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        // Set default username is anonymous.
+        mUsername = ANONYMOUS;
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build();
+
+        // Initialize Firebase Auth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser == null) {
+            // Not signed in, launch the Sign In activity
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+        } else {
+            mUsername = mFirebaseUser.getDisplayName();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            }
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == NEW_CAT_ACTIVITY_REQUEST_CODE &amp;&amp; resultCode == RESULT_OK) {
+            //On return of add image activity
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                mFirebaseAuth.signOut();
+                Auth.GoogleSignInApi.signOut(mGoogleApiClient);
+                mUsername = ANONYMOUS;
+                startActivity(new Intent(this, SignInActivity.class));
+                finish();
+                return true;
+            case R.id.action_settings:
+                //TODO: Maybe make a settings page
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
+        // be available.
+        Log.d(TAG, &#34;onConnectionFailed:&#34; + connectionResult);
+        Toast.makeText(this, &#34;Google Play Services error.&#34;, Toast.LENGTH_SHORT).show();
+    }
+
+    public void getPermission(){
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                &amp;&amp; ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.LOCATION_PERMISSION);
+            Log.v(TAG, &#34;*****Needed to ask permission*****&#34;);
+        }
+    }
+}
+</code></pre>
+<h2>SectionsPagerAdapter</h2>
+<p>This class is needed to define which fragments will be created and displayed when the user is swiping in a certain direction. In our case, this is quite simple since we only have two fragments to display.</p>
+<pre><code>public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+    public SectionsPagerAdapter(FragmentManager fm) {
+        super(fm);
+    }
+
+    @Override
+    public Fragment getItem(int position) {
+        // getItem is called to instantiate the fragment for the given page.
+        // Return a PlaceholderFragment (defined as a static inner class below).
+        if (position == 0)
+            return VoteFragment.newInstance();
+        else
+            return UsersImagesFragment.newInstance();
+    }
+
+    @Override
+    public int getCount() {
+        // Show 2 total pages.
+        return 2;
+    }
+}
+</code></pre>
+<h2>Vote Fragment</h2>
+<p>The first fragment we will be creating is the voting fragment. This fragment will allow the user vote on whether or not they like or dislike a certain picture in our database. We will need to read from our database using the class &#34;DatabaseReference&#34;. Once we successfully read the contents from the database, we will load them into an ArrayList. This will allow us to index through them as teh user votes on images. We are also storing each images UUID, so that when a user votes on an image, we know exactly which one they chose. Once the user votes on an image, we will update the model we have stored in the ArrayList with it&#39;s new VoteCount, then update the record we have in Firebase (Asynchronously), and then we will index the next image. Note, we are loading in each image using Picasso. Picasso is an easy to use library for downloading images from URLs and displaying them in an ImageView.</p>
+<pre><code>public class VoteFragment extends Fragment {
+    //Constants
+    private static final String TAG = &#34;VOTE_FRAGMENT&#34;;
+    private static final String DATABASE_NAME = &#34;uploads&#34;;
+
+    //UI
+    private View rootView;
+    private Button upVoteButton;
+    private Button downVoteButton;
+    private ImageView image;
+    private TextView titleText;
+    private TextView descriptionText;
+
+    //Firebase
+    private static DatabaseReference mDb;
+    private FirebaseAuth mAuth;
+    private String userId;
+
+    //Random Variables
+    private List&lt;ImageModel&gt; mImageModels;
+    private int currImage;
+
+    public VoteFragment() {
+    }
+
+    /**
+     * Returns a new instance of this fragment for the given section
+     * number.
+     */
+    public static VoteFragment newInstance() {
+        VoteFragment fragment = new VoteFragment();
+
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        rootView = inflater.inflate(R.layout.fragment_vote, container, false);
+
+        mAuth = FirebaseAuth.getInstance();
+        userId = mAuth.getCurrentUser().getUid();
+        mDb = FirebaseDatabase.getInstance().getReference();
+
+        upVoteButton = rootView.findViewById(R.id.vote_positive_button);
+        downVoteButton = rootView.findViewById(R.id.vote_negative_button);
+        image = rootView.findViewById(R.id.vote_image);
+        titleText = rootView.findViewById(R.id.vote_image_title);
+        descriptionText = rootView.findViewById(R.id.vote_image_description);
+
+        mImageModels = new ArrayList&lt;&gt;();
+        currImage = 0;
+
+        return rootView;
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+
+        ValueEventListener mValueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+                    Log.v(TAG, &#34;DataSnapshot: &#34; + dataSnapshot.toString());
+                    for (DataSnapshot postSnapshot : dataSnapshot.child(&#34;uploads&#34;).getChildren()) {
+                        ImageModel upload = postSnapshot.getValue(ImageModel.class);
+                        upload.setUid(postSnapshot.getKey());
+                        Log.v(TAG, &#34;Image UUID: &#34; + postSnapshot.getKey());
+                        mImageModels.add(upload);
+                    }
+                    if(mImageModels.size() &gt;= 1){
+                        titleText.setText(mImageModels.get(currImage).getTitle());
+                        descriptionText.setText(mImageModels.get(currImage).getDescription());
+                        Picasso.with(getContext()).load(mImageModels.get(currImage).getImageUrl()).fit().centerCrop().into(image);
+                    }
+                }else {
+                    //TODO: Display text saying there are no images to find
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        mDb.addListenerForSingleValueEvent(mValueEventListener);
+
+        upVoteButton.setOnClickListener(view -&gt; {
+            String id = mImageModels.get(currImage).getUid();
+            long numVotes = mImageModels.get(currImage).getVoteCount() + 1;
+            ImageModel model = new ImageModel(mImageModels.get(currImage), numVotes);
+            mImageModels.get(currImage).setVoteCount(numVotes);
+            mDb.child(DATABASE_NAME).child(id).setValue(model);
+            nextImage();
+        });
+
+        downVoteButton.setOnClickListener(view -&gt; {
+            String id = mImageModels.get(currImage).getUid();
+            long numVotes = mImageModels.get(currImage).getVoteCount() - 1;
+            ImageModel model = new ImageModel(mImageModels.get(currImage), numVotes);
+            mImageModels.get(currImage).setVoteCount(numVotes);
+            mDb.child(DATABASE_NAME).child(id).setValue(model);
+            nextImage();
+        });
+    }
+
+    public void nextImage(){
+        currImage++;
+        if (currImage &gt;= mImageModels.size()) currImage = 0;
+        titleText.setText(mImageModels.get(currImage).getTitle());
+        descriptionText.setText(mImageModels.get(currImage).getDescription());
+        Picasso.with(getContext()).load(mImageModels.get(currImage).getImageUrl()).fit().centerCrop().into(image);
+    }
+}
+</code></pre>
+<h2>UsersImagesFragment</h2>
+<p>This next fragment will display all of the users&#39; submitted images, along with metadata about each one, finally, these images will be displayed in descending order by votes. The ImageModels are displayed in CardViews, inside of a RecyclerView.The Recyc;erView is created using a special Firebase UI component called &#34;FirebaseRecyclerAdapter&#34; which will make it easy to sync our RecyclerView with the most up-to-date version of the Firebase database. With this implementation we are attaching to it a &#34;ValueEventListener&#34; which will be triggered each time the Firebase database is changed so we can update our UI accordingly (and possibly rearrange the order of the list). Firebase only allows us to sort in ascending order, and so to get around this, we will modifying our LinearLayoutManager with &#34;setReverseLayout(true)&#34; and &#34;setStackFromEnd(true)&#34; this way the items are in descending order.</p>
+<pre><code>public class UsersImagesFragment extends Fragment {
+
+    //Constants
+    private static final String TAG = &#34;USER_IMAGES_FRAGMENT&#34;;
+    private static final String DATABASE_NAME = &#34;uploads&#34;;
+
+    //UI
+    private View rootView;
+    private RecyclerView recyclerView;
+    private ProgressBar progressBar;
+
+    //Firebase
+    private static DatabaseReference mDb;
+    private FirebaseRecyclerAdapter&lt;ImageModel, MImageHolder&gt; adapter;
+    private FirebaseAuth mAuth;
+    private String userId;
+
+    private List&lt;ImageModel&gt; mImageModels;
+
+    public UsersImagesFragment() {
+    }
+
+    /**
+     * Returns a new instance of this fragment for the given section
+     * number.
+     */
+    public static UsersImagesFragment newInstance() {
+        return new UsersImagesFragment();
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        recyclerView = rootView.findViewById(R.id.mRecyclerView);
+        progressBar = rootView.findViewById(R.id.main_progress_bar);
+
+        mAuth = FirebaseAuth.getInstance();
+        userId = mAuth.getCurrentUser().getUid();
+        mDb = FirebaseDatabase.getInstance().getReference();
+
+        mImageModels = new ArrayList&lt;&gt;();
+
+        return rootView;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Query q = mDb.child(DATABASE_NAME).orderByChild(&#34;voteCount&#34;);
+
+        FirebaseRecyclerOptions&lt;ImageModel&gt; options =
+                new FirebaseRecyclerOptions.Builder&lt;ImageModel&gt;()
+                        .setQuery(q, ImageModel.class)
+                        .build();
+
+        adapter = new FirebaseRecyclerAdapter &lt;ImageModel, MImageHolder&gt;(options) {
+            @Override
+            protected void onBindViewHolder(@NonNull MImageHolder holder, int position, @NonNull ImageModel model) {
+                holder.title.setText(model.getTitle());
+                holder.description.setText(model.getDescription());
+                holder.location.setText(model.getLocation());
+                holder.voteCount.setText(&#34;Number of Votes: &#34; + String.valueOf(model.getVoteCount()));
+                holder.lables.setText(&#34;Lables: &#34; + model.getLables());
+                Picasso.with(getContext()).load(model.getImageUrl()).into(holder.image);
+            }
+
+            @NonNull
+            @Override
+            public MImageHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+                View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recycler_view_item,
+                        viewGroup, false);
+                progressBar.setVisibility(View.INVISIBLE);
+                return new MImageHolder(v);
+            }
+        };
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+            }
+        });
+
+        recyclerView.setHasFixedSize(true);
+        LinearLayoutManager manager = new LinearLayoutManager(getActivity());
+        manager.setReverseLayout(true);
+        manager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
+
+        adapter.startListening();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        adapter.stopListening();
+    }
+
+    public static class MImageHolder extends RecyclerView.ViewHolder{
+        ImageView image;
+        TextView title;
+        TextView description;
+        TextView location;
+        TextView voteCount;
+        TextView lables;
+
+        MImageHolder(@NonNull View itemView) {
+            super(itemView);
+
+            image = itemView.findViewById(R.id.recyclerview_image);
+            title = itemView.findViewById(R.id.recyclerview_title);
+            description = itemView.findViewById(R.id.recyclerview_desc);
+            location = itemView.findViewById(R.id.recyclerview_location);
+            voteCount = itemView.findViewById(R.id.recyclerview_votes);
+            lables = itemView.findViewById(R.id.recyclerview_lables);
+        }
+    }
+}
+</code></pre>
+<h2>Add Images Activity</h2>
+<p>This activity will be where we add an image to the firebase database. This is also where we will be using Google ML to label our images before they are sent to the database. We will be using the class &#34;StorageReference&#34; in order to store our images directly into a file system, then we will be suing &#34;Databasereference&#34; in order to store the data about our images (including a URL our image so we can download it later), finally we will be converting our image to a bitmap and running it through Googles Image Label API with the classes &#34;FirebaseVisionImage&#34; and &#34;FirebaseVisionLabelDetector&#34;.</p>
+<pre><code>public class AddImageActivity extends AppCompatActivity {
+
+    public static final String TAG = &#34;ADD_CAT_ACTIVITY&#34;;
+    private static final int CAMERA_REQUEST = 1888;
+    private static final int GALLERY_REQUEST = 1789;
+
+    public static final int PICK_IMAGE = 1;
+    public static final int TAKE_IMAGE = 2;
+
+    private EditText myEditNameView;
+    private EditText myEditDescView;
+    private ImageView myImageCatView;
+    private ProgressBar myProgressBar;
+    private Button upload;
+    private Button takePicture;
+    private Button saveButton;
+
+    private String imagePath;
+
+    private StorageReference mStorageRef;
+    private DatabaseReference mDatabaseRef;
+    private Uri mUri;
+
+    private FirebaseVisionLabelDetector detector;
+    private FirebaseVisionImage firebaseVisionImage;
+
+    //Location will be stored as a lat &amp; long separated by a comma
+    private String mLocation;
+    private FusedLocationProviderClient fusedLocation;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_image);
+
+        fusedLocation = LocationServices.getFusedLocationProviderClient(this);
+
+        mStorageRef = FirebaseStorage.getInstance().getReference(&#34;uploads&#34;);
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference(&#34;uploads&#34;);
+
+        detector = FirebaseVision.getInstance().getVisionLabelDetector();
+
+        getLocation();
+
+        myEditNameView = findViewById(R.id.edit_image_name);
+        myEditDescView = findViewById(R.id.edit_image_desc);
+        myImageCatView = findViewById(R.id.add_image);
+        //TODO: Add progress bar to layout and then bind view here
+        //myProgressBar = findViewById(R.id.upload_progress_bar);
+
+        takePicture = findViewById(R.id.capture_image);
+        takePicture.setOnClickListener(view -&gt; {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+            List&lt;ResolveInfo&gt; activities = getPackageManager().queryIntentActivities(intent, 0);
+
+            if (!activities.isEmpty()) {
+                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            }
+        });
+
+        upload = findViewById(R.id.upload_image);
+        upload.setOnClickListener(view -&gt; {
+            Intent intent = new Intent();
+            intent.setType(&#34;image/*&#34;);
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, &#34;Select Picture&#34;), GALLERY_REQUEST);
+        });
+
+        saveButton = findViewById(R.id.button_save);
+        saveButton.setOnClickListener(view -&gt; {
+            Intent replyIntent = new Intent();
+            if (TextUtils.isEmpty(myEditNameView.getText()) || TextUtils.isEmpty(myEditDescView.getText())) {
+                setResult(RESULT_CANCELED, replyIntent);
+            } else {
+                uploadFile();
+            }
+            finish();
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == GALLERY_REQUEST &amp;&amp; resultCode == Activity.RESULT_OK) {
+            mUri = data.getData();
+            Picasso.with(this).load(mUri).into(myImageCatView);
+        }
+
+        if (requestCode == CAMERA_REQUEST &amp;&amp; resultCode == Activity.RESULT_OK) {
+            mUri = data.getData();
+            Picasso.with(this).load(mUri).into(myImageCatView);
+        }
+    }
+
+    public void getLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                &amp;&amp; ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.LOCATION_PERMISSION);
+            Log.v(TAG, &#34;*****Needed to ask permission again*****&#34;);
+        } else {
+            fusedLocation.getLastLocation().addOnSuccessListener(this, location -&gt; {
+                if (location != null) {
+                    mLocation = String.format(Locale.US, &#34;%s, %s&#34;,
+                            location.getLatitude(), location.getLongitude());
+                    Log.v(TAG, &#34;Found a location: &#34; + mLocation);
+                }
+            });
+        }
+    }
+
+    public String getFileExtention(Uri mUri){
+        ContentResolver mContent = getContentResolver();
+        MimeTypeMap mMime = MimeTypeMap.getSingleton();
+        return mMime.getExtensionFromMimeType(mContent.getType(mUri));
+    }
+
+    public void uploadFile(){
+        if(mUri != null){
+            StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + &#34;.&#34; + getFileExtention(mUri));
+
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mUri);
+                firebaseVisionImage = FirebaseVisionImage.fromBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            fileReference.putFile(mUri).continueWithTask(task -&gt; {
+                if(!task.isSuccessful()) throw task.getException();
+                return fileReference.getDownloadUrl();
+            }).addOnCompleteListener(taskA -&gt; {
+                if (taskA.isSuccessful()){
+                    Task&lt;List&lt;FirebaseVisionLabel&gt;&gt; result =
+                            detector.detectInImage(firebaseVisionImage)
+                                    .addOnSuccessListener( labels -&gt; {
+                                                StringBuilder mLables = new StringBuilder();
+                                                for (FirebaseVisionLabel l : labels) mLables.append(l.getLabel()).append(&#34;, &#34;);
+
+                                                String title = myEditNameView.getText().toString().trim();
+                                                String desc = myEditDescView.getText().toString().trim();
+                                                String location = mLocation;
+                                                String imageUrl = taskA.getResult().toString();
+                                                Log.d(TAG, &#34;Successful Upload URI: &#34; + imageUrl);
+
+                                                ImageModel mImageModel = new ImageModel(title, desc, imageUrl, location, 0, mLables.toString());
+                                                String id = mDatabaseRef.push().getKey();
+                                                mDatabaseRef.child(id).setValue(mImageModel);
+                                                Toast.makeText(AddImageActivity.this, &#34;Upload Successful w/ ML&#34;, Toast.LENGTH_SHORT).show();
+                                            })
+                                    .addOnFailureListener( e -&gt; {
+                                                String mLables = &#34;N/A&#34;;
+                                                String title = myEditNameView.getText().toString().trim();
+                                                String desc = myEditDescView.getText().toString().trim();
+                                                String location = mLocation;
+                                                String imageUrl = taskA.getResult().toString();
+                                                Log.d(TAG, &#34;Successful Upload URI: &#34; + imageUrl);
+
+                                                ImageModel mImageModel = new ImageModel(title, desc, imageUrl, location, 0, mLables);
+                                                String id = mDatabaseRef.push().getKey();
+                                                mDatabaseRef.child(id).setValue(mImageModel);
+                                                Toast.makeText(AddImageActivity.this, &#34;Upload Successful w/o ML&#34;, Toast.LENGTH_SHORT).show();
+                                            });
+                }else {
+                    Toast.makeText(this, &#34;Upload failed: &#34; + taskA.getException() ,
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Setting Up The Front End" duration="0">
+        <p>Our front end will also be very simple. Basically we will have three layouts, one for voting on images, one for viewing the images in the RecyclerView, and one for adding an image to the database. Since the layouts are not the core component of this tutorial, I will just provide the XML for each layout.</p>
+<h2>Login Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;FrameLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    android:id=&#34;@+id/sign_in_layout&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    android:gravity=&#34;center&#34;
+    android:orientation=&#34;vertical&#34;&gt;
+
+    &lt;TextView
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:textSize=&#34;30sp&#34;
+        android:textStyle=&#34;bold&#34;
+        android:layout_gravity=&#34;center_horizontal&#34;
+        android:layout_marginTop=&#34;40dp&#34;
+        android:text=&#34;@string/sign_in&#34;/&gt;
+
+    &lt;ImageView
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:src=&#34;@mipmap/logo_round&#34;
+        android:layout_gravity=&#34;center_horizontal&#34;
+        android:layout_marginTop=&#34;115dp&#34;/&gt;
+
+    &lt;com.google.android.gms.common.SignInButton
+        android:id=&#34;@+id/sign_in_button&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_centerInParent=&#34;true&#34;
+        android:visibility=&#34;visible&#34;
+        android:layout_gravity=&#34;center&#34;/&gt;
+
+    &lt;ProgressBar
+        android:id=&#34;@+id/sign_in_loading&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_gravity=&#34;center|bottom&#34;
+        android:layout_marginBottom=&#34;30dp&#34;
+        android:visibility=&#34;invisible&#34;
+        android:indeterminate=&#34;true&#34;/&gt;
+&lt;/FrameLayout&gt;
+</code></pre>
+<h2>Main Activity Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.design.widget.CoordinatorLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    android:id=&#34;@+id/main_content&#34;
+    android:fitsSystemWindows=&#34;true&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    tools:context=&#34;.MainActivity&#34;&gt;
+
+    &lt;android.support.design.widget.AppBarLayout
+        android:id=&#34;@+id/appbar&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:paddingTop=&#34;@dimen/appbar_padding_top&#34;
+        android:theme=&#34;@style/AppTheme.AppBarOverlay&#34;&gt;
+
+        &lt;android.support.v7.widget.Toolbar
+            android:id=&#34;@+id/toolbar&#34;
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;?attr/actionBarSize&#34;
+            android:layout_weight=&#34;1&#34;
+            android:background=&#34;?attr/colorPrimary&#34;
+            app:layout_scrollFlags=&#34;scroll|enterAlways&#34;
+            app:popupTheme=&#34;@style/AppTheme.PopupOverlay&#34;
+            app:title=&#34;@string/app_name&#34; /&gt;
+    &lt;/android.support.design.widget.AppBarLayout&gt;
+
+    &lt;android.support.v4.view.ViewPager
+        android:id=&#34;@+id/container&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;
+        app:layout_behavior=&#34;@string/appbar_scrolling_view_behavior&#34; /&gt;
+
+    &lt;android.support.design.widget.FloatingActionButton
+        android:id=&#34;@+id/fab&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;match_parent&#34;
+        android:layout_gravity=&#34;end|bottom&#34;
+        android:layout_margin=&#34;16dp&#34;
+        android:src=&#34;@drawable/ic_add_black_24dp&#34;
+        app:backgroundTint=&#34;@android:color/holo_blue_bright&#34;
+        app:layout_constraintBottom_toBottomOf=&#34;parent&#34;
+        app:layout_constraintRight_toRightOf=&#34;parent&#34; /&gt;
+&lt;/android.support.design.widget.CoordinatorLayout&gt;
+</code></pre>
+<h2>User Images Fragment Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    android:id=&#34;@+id/constraintLayout&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;&gt;
+
+    &lt;RelativeLayout
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;&gt;
+        &lt;ProgressBar
+            android:id=&#34;@+id/main_progress_bar&#34;
+            android:layout_width=&#34;wrap_content&#34;
+            android:layout_height=&#34;wrap_content&#34;
+            android:layout_centerInParent=&#34;true&#34;/&gt;
+    &lt;/RelativeLayout&gt;
+
+    &lt;LinearLayout
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;match_parent&#34;&gt;
+
+        &lt;android.support.v7.widget.RecyclerView
+            android:id=&#34;@+id/mRecyclerView&#34;
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;match_parent&#34;
+            android:scrollbars=&#34;vertical&#34; /&gt;
+    &lt;/LinearLayout&gt;
+&lt;/android.support.constraint.ConstraintLayout&gt;
+</code></pre>
+<h2>RecyclerView Item Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;LinearLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;wrap_content&#34;
+    android:orientation=&#34;vertical&#34;&gt;
+
+    &lt;android.support.v7.widget.CardView
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginTop=&#34;5dp&#34;
+        android:layout_marginEnd=&#34;5dp&#34;
+        android:layout_marginStart=&#34;5dp&#34;
+        android:backgroundTint= &#34;#F8F0FB&#34;&gt;
+
+        &lt;RelativeLayout
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;wrap_content&#34;
+            android:padding=&#34;8dp&#34;&gt;
+
+            &lt;ImageView
+                android:id=&#34;@+id/recyclerview_image&#34;
+                android:layout_width=&#34;120dp&#34;
+                android:layout_height=&#34;90dp&#34;
+                android:layout_marginStart=&#34;5dp&#34;
+                android:padding=&#34;4dp&#34;
+                android:src=&#34;@mipmap/ic_launcher&#34;
+                android:contentDescription=&#34;@string/recycler_view_image_desc&#34; /&gt;
+            &lt;TextView
+                android:id=&#34;@+id/recyclerview_title&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:layout_marginStart=&#34;5dp&#34;
+                android:layout_toEndOf=&#34;@id/recyclerview_image&#34;
+                android:textAppearance=&#34;@style/Base.TextAppearance.AppCompat.Medium&#34;
+                android:textColor=&#34;#000000&#34;
+                android:text=&#34;@string/image_title&#34;/&gt;
+            &lt;TextView
+                android:id=&#34;@+id/recyclerview_location&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:layout_below=&#34;@id/recyclerview_title&#34;
+                android:layout_marginStart=&#34;5dp&#34;
+                android:layout_marginTop=&#34;0dp&#34;
+                android:layout_toEndOf=&#34;@id/recyclerview_image&#34;
+                android:text=&#34;@string/location&#34;
+                android:textAppearance=&#34;@style/Base.TextAppearance.AppCompat.Small&#34; /&gt;
+            &lt;TextView
+                android:id=&#34;@+id/recyclerview_desc&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:layout_below=&#34;@id/recyclerview_location&#34;
+                android:layout_marginStart=&#34;5dp&#34;
+                android:layout_marginTop=&#34;5dp&#34;
+                android:layout_toEndOf=&#34;@id/recyclerview_image&#34;
+                android:textAppearance=&#34;@style/Base.TextAppearance.AppCompat.Body1&#34;
+                android:text=&#34;@string/image_desc&#34;/&gt;
+            &lt;TextView
+                android:id=&#34;@+id/recyclerview_votes&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:layout_marginStart=&#34;5dp&#34;
+                android:layout_below=&#34;@id/recyclerview_desc&#34;
+                android:layout_toEndOf=&#34;@+id/recyclerview_image&#34;
+                android:textAppearance=&#34;@style/Base.TextAppearance.AppCompat.Body1&#34;
+                android:textColor=&#34;#000000&#34;
+                android:text=&#34;@string/vote_text&#34;/&gt;
+
+            &lt;TextView
+                android:id=&#34;@+id/recyclerview_lables&#34;
+                android:layout_width=&#34;wrap_content&#34;
+                android:layout_height=&#34;wrap_content&#34;
+                android:layout_below=&#34;@+id/recyclerview_votes&#34;
+                android:backgroundTint=&#34;#87F1FF&#34;
+                android:textColor=&#34;#BD8B9C&#34;
+                android:text=&#34;Lables&#34;/&gt;
+        &lt;/RelativeLayout&gt;
+    &lt;/android.support.v7.widget.CardView&gt;
+&lt;/LinearLayout&gt;
+</code></pre>
+<h2>Vote Fragment Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;android.support.constraint.ConstraintLayout
+    xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    android:orientation=&#34;vertical&#34;
+    tools:context=&#34;com.aantaya.imagewars.MainActivity&#34;&gt;
+
+    &lt;Button
+        android:id=&#34;@+id/vote_negative_button&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginStart=&#34;16dp&#34;
+        android:layout_marginBottom=&#34;160dp&#34;
+        android:backgroundTint=&#34;#F46036&#34;
+        android:textColor=&#34;#FFF&#34;
+        android:text=&#34;@string/negative_button&#34;
+        app:layout_constraintBottom_toBottomOf=&#34;parent&#34;
+        app:layout_constraintStart_toStartOf=&#34;parent&#34; /&gt;
+
+    &lt;Button
+        android:id=&#34;@+id/vote_positive_button&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginEnd=&#34;16dp&#34;
+        android:layout_marginBottom=&#34;160dp&#34;
+        android:backgroundTint=&#34;#5B85AA&#34;
+        android:textColor=&#34;#FFF&#34;
+        android:text=&#34;@string/positive_button&#34;
+        app:layout_constraintBottom_toBottomOf=&#34;parent&#34;
+        app:layout_constraintEnd_toEndOf=&#34;parent&#34; /&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/vote_image_description&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginStart=&#34;16dp&#34;
+        android:layout_marginEnd=&#34;16dp&#34;
+        android:layout_marginBottom=&#34;16dp&#34;
+        android:text=&#34;@string/image_desc&#34;
+        android:textAlignment=&#34;center&#34;
+        app:layout_constraintBottom_toTopOf=&#34;@+id/vote_positive_button&#34;
+        app:layout_constraintEnd_toEndOf=&#34;parent&#34;
+        app:layout_constraintStart_toStartOf=&#34;parent&#34; /&gt;
+
+    &lt;TextView
+        android:id=&#34;@+id/vote_image_title&#34;
+        android:layout_width=&#34;wrap_content&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginStart=&#34;16dp&#34;
+        android:layout_marginEnd=&#34;16dp&#34;
+        android:layout_marginBottom=&#34;16dp&#34;
+        android:text=&#34;@string/image_title&#34;
+        android:textAlignment=&#34;center&#34;
+        android:textSize=&#34;24sp&#34;
+        android:textStyle=&#34;bold&#34;
+        app:layout_constraintBottom_toTopOf=&#34;@+id/vote_image_description&#34;
+        app:layout_constraintEnd_toEndOf=&#34;parent&#34;
+        app:layout_constraintStart_toStartOf=&#34;parent&#34; /&gt;
+
+    &lt;ImageView
+        android:id=&#34;@+id/vote_image&#34;
+        android:layout_width=&#34;0dp&#34;
+        android:layout_height=&#34;0dp&#34;
+        android:layout_marginStart=&#34;16dp&#34;
+        android:layout_marginTop=&#34;16dp&#34;
+        android:layout_marginEnd=&#34;16dp&#34;
+        android:layout_marginBottom=&#34;16dp&#34;
+        android:adjustViewBounds=&#34;true&#34;
+        android:contentDescription=&#34;@string/vote_image_desc&#34;
+        android:cropToPadding=&#34;false&#34;
+        android:scaleType=&#34;fitCenter&#34;
+        app:layout_constraintBottom_toTopOf=&#34;@+id/vote_image_title&#34;
+        app:layout_constraintEnd_toEndOf=&#34;parent&#34;
+        app:layout_constraintStart_toStartOf=&#34;parent&#34;
+        app:layout_constraintTop_toTopOf=&#34;parent&#34;
+        tools:srcCompat=&#34;@tools:sample/avatars&#34; /&gt;
+&lt;/android.support.constraint.ConstraintLayout&gt;
+
+</code></pre>
+<h2>Add Image Activity Layout</h2>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+
+&lt;LinearLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    android:layout_width=&#34;match_parent&#34;
+    android:layout_height=&#34;match_parent&#34;
+    android:orientation=&#34;vertical&#34;&gt;
+
+    &lt;ImageView
+        android:id=&#34;@+id/add_image&#34;
+        android:layout_width=&#34;100dp&#34;
+        android:layout_height=&#34;100dp&#34;
+        android:contentDescription=&#34;@string/vote_image_desc&#34;
+        android:gravity=&#34;center&#34;
+        android:padding=&#34;15dp&#34;
+        android:scaleType=&#34;centerInside&#34; /&gt;
+
+    &lt;LinearLayout
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:orientation=&#34;horizontal&#34;&gt;
+
+        &lt;Button
+            android:id=&#34;@+id/upload_image&#34;
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;wrap_content&#34;
+            android:layout_weight=&#34;0.5&#34;
+            android:text=&#34;@string/get_gallery_image&#34;
+            tools:ignore=&#34;ButtonStyle&#34; /&gt;
+
+        &lt;Button
+            android:id=&#34;@+id/capture_image&#34;
+            android:layout_width=&#34;match_parent&#34;
+            android:layout_height=&#34;wrap_content&#34;
+            android:layout_weight=&#34;0.5&#34;
+            android:text=&#34;@string/get_camera_image&#34;
+            tools:ignore=&#34;ButtonStyle&#34; /&gt;
+    &lt;/LinearLayout&gt;
+
+    &lt;EditText
+        android:id=&#34;@+id/edit_image_name&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginTop=&#34;@dimen/big_padding&#34;
+        android:layout_marginBottom=&#34;@dimen/big_padding&#34;
+        android:fontFamily=&#34;sans-serif-light&#34;
+        android:hint=&#34;@string/hint_name&#34;
+        android:inputType=&#34;textAutoComplete&#34;
+        android:padding=&#34;@dimen/small_padding&#34;
+        android:textSize=&#34;18sp&#34;
+        tools:ignore=&#34;Autofill&#34; /&gt;
+
+    &lt;EditText
+        android:id=&#34;@+id/edit_image_desc&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:layout_marginTop=&#34;@dimen/big_padding&#34;
+        android:layout_marginBottom=&#34;@dimen/big_padding&#34;
+        android:fontFamily=&#34;sans-serif-light&#34;
+        android:hint=&#34;@string/hint_desc&#34;
+        android:inputType=&#34;textAutoComplete&#34;
+        android:padding=&#34;@dimen/small_padding&#34;
+        android:textSize=&#34;18sp&#34;
+        tools:ignore=&#34;Autofill&#34; /&gt;
+
+    &lt;Button
+        android:id=&#34;@+id/button_save&#34;
+        android:layout_width=&#34;match_parent&#34;
+        android:layout_height=&#34;wrap_content&#34;
+        android:background=&#34;@color/colorPrimary&#34;
+        android:text=&#34;@string/button_save&#34;
+        android:textColor=&#34;@color/buttonLabel&#34; /&gt;
+&lt;/LinearLayout&gt;
+</code></pre>
+<h2>Menu Fragment Layout</h2>
+<pre><code>&lt;menu xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+    xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34;
+    xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+    tools:context=&#34;com.aantaya.imagewars.MainActivity&#34;&gt;
+    &lt;item
+        android:id=&#34;@+id/action_settings&#34;
+        android:orderInCategory=&#34;100&#34;
+        android:title=&#34;@string/action_settings&#34;
+        app:showAsAction=&#34;never&#34; /&gt;
+    &lt;item
+        android:id=&#34;@+id/action_logout&#34;
+        android:orderInCategory=&#34;100&#34;
+        android:title=&#34;@string/action_logout&#34;
+        app:showAsAction=&#34;never&#34; /&gt;
+&lt;/menu&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Deployment" duration="0">
+        <p>In order to deploy this application on a device, connect the device to your computer, enable USB debugging on the device through the developer&#39;s options. Next click the ‘Run&#39; button in Android Studio and select the connected device as a Deployment Target.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Authors" duration="0">
+        <ul>
+<li><strong>Alexander Antaya</strong> - <em>Initial work</em> - <a href="https://github.com/aantaya1/CS4518" target="_blank">GitHub</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Acknowledgments" duration="0">
+        <ul>
+<li>Android documentation is AWESOME :)</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49880327-14', 'auto');
+
+    (function() {
+      var gaCodelab = '';
+      if (gaCodelab) {
+        ga('create', gaCodelab, 'auto', {name: 'codelab'});
+      }
+
+      var gaView;
+      var parts = location.search.substring(1).split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var param = parts[i].split('=');
+        if (param[0] === 'viewga') {
+          gaView = param[1];
+          break;
+        }
+      }
+      if (gaView && gaView !== gaCodelab) {
+        ga('create', gaView, 'auto', {name: 'view'});
+      }
+    })();
+  </script>
+
+</body>
+</html>
