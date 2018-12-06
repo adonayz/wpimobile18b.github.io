@@ -15,10 +15,8 @@ layout: home
 ## Announcements
 Please refer to [here](/revisions/) for a complete list of past announcements. 
 
-- Nov 24: uploaded week 6 readings, and posted Project 3 Part 2 tutorials!
-- Nov 27: posted a Project 4 part 2 tutorial! 
 - Dec 1: uploaded **lecture 10**, **lecture 11**, **readings 12**, and **readings 13**, and posted Project 4 Part 2 tutorials!
-
+- Dec 5: uploaded **lecture 12**; SA office hour on Dec 11 is changed to **6:30pm-8:30pm**. 
 ## Schedule  ##
 
 | Lecture | Description | Readings| Due | 
@@ -34,6 +32,6 @@ Please refer to [here](/revisions/) for a complete list of past announcements.
 | Lecture 9 | Student Presentations: Topic Survey | ~~reading 9~~ | [Topic Survey in-class instruction](https://wpimobile18b.github.io/tutorials/topicSurveyInstruction.md)
 | Lecture 10 | [Android Internals: part 1](https://ia.wpi.edu/cs4518/resources.php)  | [reading 10](https://ia.wpi.edu/cs4518/resources.php) |*Project 4 Part 2 tutorials:* <br> [Firebase and GoogleML by Alex Antaya](https://wpimobile18b.github.io/tutorials/Project4AlexA/#0)
 | Lecture 11| [Android Internals: part 2](https://ia.wpi.edu/cs4518/resources.php) | [reading 11](https://ia.wpi.edu/cs4518/resources.php) | 
-| Lecture 12 | Mobile-specific optimization: part 1    | [reading 12](https://ia.wpi.edu/cs4518/resources.php) |
+| Lecture 12 | [Mobile-specific optimization: part 1](https://ia.wpi.edu/cs4518/resources.php) | [reading 12](https://ia.wpi.edu/cs4518/resources.php) |
 | Lecture 13 | Mobile-specific optimization: part 2 | [reading 13](https://ia.wpi.edu/cs4518/resources.php) |
 | Lecture 14 | Wrap up | ~~reading 14~~ | 

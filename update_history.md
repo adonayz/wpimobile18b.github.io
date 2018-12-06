@@ -19,3 +19,4 @@ permalink: /revisions/
 - Nov 24: uploaded week 6 readings, and posted Project 3 Part 2 tutorials!
 - Nov 27: posted a Project 4 part 2 tutorial! 
 - Dec 1: uploaded **lecture 10**, **lecture 11**, **readings 12**, and **readings 13**. 
+- Dec 5: uploaded **lecture 12**; SA office hour on Dec 11 is changed to **6:30pm-8:30pm**. 
